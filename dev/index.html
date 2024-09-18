@@ -99,6 +99,10 @@
           Active Index State:
           <button id="index-state">Log</button>
         </div>
+        <div>
+          Cache Log:
+          <button id="cache-log">Print</button>
+        </div>
       </div>
     </details>
   </header>
@@ -116,6 +120,7 @@
   const consolidateToggle = document.querySelector('#consolidate');
   const indexToggle = document.querySelector('#index');
   const indexState = document.querySelector('#index-state');
+  const printLog = document.querySelector('#cache-log');
 
   connectorMenu.addEventListener('change', setConnector);
   exampleMenu.addEventListener('change', reload);
@@ -134,6 +139,9 @@
     } else {
       console.warn('No Active Data Cube Index');
     }
+  });
+  printLog.addEventListener('click', () => {
+    vg.coordinator().manager.cacheLogs?.displayLogsAsTable();
   });
 
   setQueryLog();

@@ -1,3 +1,4 @@
+import { CacheLogger } from './CacheLogger.js';
 import { consolidator } from './QueryConsolidator.js';
 import { lruCache, voidCache } from './util/cache.js';
 import { PriorityQueue } from './util/priority-queue.js';
@@ -6,7 +7,7 @@ import { QueryResult } from './util/query-result.js';
 export const Priority = { High: 0, Normal: 1, Low: 2 };
 
 export class QueryManager {
-  constructor() {
+  constructor(cacheLogs = true) {
     this.queue = new PriorityQueue(3);
     this.db = null;
     this.clientCache = null;
@@ -15,6 +16,7 @@ export class QueryManager {
     this.recorders = [];
     this.pending = null;
     this._consolidate = null;
+    this.cacheLogs = cacheLogs ? new CacheLogger() : null;
   }
 
   next() {
@@ -61,7 +63,10 @@ export class QueryManager {
         this._logger.debug('Query', { type, sql, ...options });
       }
       const data = await this.db.query({ type, sql, ...options });
-      if (cache) this.clientCache.set(sql, data);
+      if (cache) {
+        this.clientCache.set(sql, data);
+        this.cacheLogs?.record(sql, (performance.now() - t0).toFixed(2));
+      }
       this._logger.debug(`Request: ${(performance.now() - t0).toFixed(1)}`);
       result.fulfill(data);
     } catch (err) {

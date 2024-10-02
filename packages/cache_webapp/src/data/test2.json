@@ -1,0 +1,42 @@
+[
+    {
+        "Index": 0,
+        "Type": "GET",
+        "Query": "SELECT \"i\" AS \"index\", SUM(\"w\")::DOUBLE AS \"densit…AND 180)) GROUP BY \"index\" HAVING (\"density\" > 0)",
+        "Timestamp": "2024-09-23T17:24:01.582Z",
+        "Latency": 29.70,
+        "Size": 473
+    },
+    {
+        "Index": 1,
+        "Type": "SET",
+        "Query": "SELECT \"i\" AS \"index\", SUM(\"w\")::DOUBLE AS \"densit…AND 180)) GROUP BY \"index\" HAVING (\"density\" > 0)",
+        "Timestamp": "2024-09-23T17:24:01.582Z",
+        "Latency": 29.70,
+        "Size": 473
+    },
+    {
+        "Index": 2,
+        "Type": "GET",
+        "Query": "SELECT \"i\" AS \"index\", SUM(\"w\")::DOUBLE AS \"densit…ND 2298)) GROUP BY \"index\" HAVING (\"density\" > 0)",
+        "Timestamp": "2024-09-23T17:24:01.604Z",
+        "Latency": 21,
+        "Size": 521
+    },
+    {
+        "Index": 3,
+        "Type": "GET",
+        "Query": "SELECT \"index\", SUM(\"density\")::DOUBLE AS \"density…701754 - -58::DOUBLE))::INTEGER) GROUP BY \"index\"",
+        "Timestamp": "2024-09-23T17:24:09.004Z",
+        "Latency": 12.1,
+        "Size": 282
+    },
+    {
+        "Index": 4,
+        "Type": "GET",
+        "Query": "SELECT \"i\" AS \"index\", SUM(\"w\")::DOUBLE AS \"densit…AND 180)) GROUP BY \"index\" HAVING (\"density\" > 0)",
+        "Timestamp": "2024-09-23T17:24:01.582Z",
+        "Latency": 29.70,
+        "Size": 473
+    }
+]

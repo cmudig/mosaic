@@ -57,8 +57,9 @@ def get_dependencies(data) -> List[str]:
             refVal = data["$ref"]
             dependencies.append(refVal.split('/')[-1])
         
-        for value in data.values():
-            dependencies = dependencies + get_dependencies(value)
+        for key, value in data.items():
+            if key != "anyOf":
+                dependencies = dependencies + get_dependencies(value)
     elif isinstance(data, list):
         for item in data:
             dependencies = dependencies + get_dependencies(item)
@@ -153,7 +154,7 @@ def generate_schema_wrapper(schema_file: Path, output_file: Path) -> str:
     ts = graphlib.TopologicalSorter()
     
     for name, schema in rootschema_definitions.items():
-        print(name)
+        #print(name)
         dependencies = get_dependencies(schema)
         if dependencies:
             #print(dependencies)
@@ -162,7 +163,7 @@ def generate_schema_wrapper(schema_file: Path, output_file: Path) -> str:
             ts.add(name)
     
     class_order = list(ts.static_order())
-    print(class_order)
+    #print(class_order)
 
     definitions: Dict[str, str] = {}
 

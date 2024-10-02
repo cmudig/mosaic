@@ -8,8 +8,9 @@ import re
 import textwrap
 from dataclasses import dataclass
 from itertools import chain
-from pathlib import Path
+from pathlib import Path 
 from urllib import request
+import graphlib
 
 sys.path.insert(0, str(Path.cwd()))
 from tools.schemapi import CodeSnippet, SchemaInfo, codegen
@@ -25,34 +26,71 @@ from tools.schemapi.utils import (
     spell_literal,
 )
 
+SCHEMA_VERSION: Final = "v0.10.0"
+SCHEMA_URL_TEMPLATE: Final = "https://raw.githubusercontent.com/uwdata/mosaic/refs/heads/main/docs/public/schema/{version}.json"
+
+def get_key_by_value(dictionary, target_value):
+    for key, value in dictionary.items():
+        if value == target_value:
+            return key
+    return None
+
+def schema_url(version: str = SCHEMA_VERSION) -> str:
+    return SCHEMA_URL_TEMPLATE.format(version=version)
+
+def download_schemafile(
+    version: str, schemapath: Path, download: bool = False
+) -> Path:
+    url = schema_url(version=version)
+    if download:
+        request.urlretrieve(url, schemapath)
+    elif not schemapath.exists():
+        msg = f"Cannot skip download: {schemapath!s} does not exist"
+        raise ValueError(msg)
+    return schemapath
+
+def get_dependencies(data) -> List[str]:
+    dependencies = []
+
+    if isinstance(data, dict):
+        if "$ref" in data:
+            refVal = data["$ref"]
+            dependencies.append(refVal.split('/')[-1])
+        
+        for value in data.values():
+            dependencies = dependencies + get_dependencies(value)
+    elif isinstance(data, list):
+        for item in data:
+            dependencies = dependencies + get_dependencies(item)
+
+    return dependencies
+
 def generate_class(class_name: str, class_schema: Dict[str, Any]) -> str:
     #Hard coded this for now...?
     imports = "from typing import Any, Union\n"
 
 
     # Define a list of primitive types
-   # primitive_types = ['string', 'number', 'integer', 'boolean']
+    # primitive_types = ['string', 'number', 'integer', 'boolean']
 
     # Check if the schema defines a simple type (like string, number) without properties
-    if 'type' in class_schema and 'properties' not in class_schema:
+    if 'type' in class_schema and 'properties' not in class_schema: #DISCUSS: Change this to not isinstance(class_schema, Iterable)
+        #assert not isinstance(class_schema, Iterable)
         return f"class {class_name}:\n    def __init__(self):\n        pass\n"
-
-
-
 
     # Check for '$ref' and handle it
     if '$ref' in class_schema:
         ref_class_name = class_schema['$ref'].split('/')[-1]
-        return f"{imports}\nclass {class_name}:\n    pass  # This is a reference to {ref_class_name}\n"
+        return f"\nclass {class_name}:\n    pass  # This is a reference to {ref_class_name}\n"
 
     if 'anyOf' in class_schema:
-            return generate_any_of_class(class_name, class_schema['anyOf'])
+        return generate_any_of_class(class_name, class_schema['anyOf'])
 
     # Extract properties and required fields
     properties = class_schema.get('properties', {})
     required = class_schema.get('required', [])
 
-    class_def = f"{imports}class {class_name}:\n"
+    class_def = f"class {class_name}:\n"
     class_def += "    def __init__(self"
 
     # Generate __init__ method parameters
@@ -111,20 +149,56 @@ def generate_schema_wrapper(schema_file: Path, output_file: Path) -> str:
     """Generate a schema wrapper for the given schema file."""
     rootschema = load_schema(schema_file)
     
+    rootschema_definitions = rootschema.get("definitions", {})
+    ts = graphlib.TopologicalSorter()
+    
+    for name, schema in rootschema_definitions.items():
+        print(name)
+        dependencies = get_dependencies(schema)
+        if dependencies:
+            #print(dependencies)
+            ts.add(name, *dependencies)
+        else:
+            ts.add(name)
+    
+    class_order = list(ts.static_order())
+    print(class_order)
+
     definitions: Dict[str, str] = {}
 
-    # Loop through the definitions and generate classes
-    for name, schema in rootschema.get("definitions", {}).items():
+    for name in class_order:
+        schema = rootschema_definitions.get(name)
         class_code = generate_class(name, schema)
         definitions[name] = class_code
 
     generated_classes =  "\n\n".join(definitions.values())
+    generated_classes = "from typing import Any, Union\n\n" + generated_classes
+    #print(generated_classes)
 
     with open(output_file, 'w') as f:
         f.write(generated_classes)
 
-# Main execution
-if __name__ == "__main__":
+def main():
+    parser = argparse.ArgumentParser(
+        prog="our_schema_generator", description="Generate the JSON schema for mosaic apps"
+    )   
+    parser.add_argument(
+        "--download", action="store_true", help="download the schema"
+    )   
+    args = parser.parse_args()
+    #vn = '.'.join(version.split(".")[:1]) #Not using this currently
+    fp = (Path(__file__).parent / ".." / 'tools').resolve()
+    schemapath = fp / "testingSchema.json"
+    schemafile = download_schemafile( 
+        version=SCHEMA_VERSION,
+        schemapath=schemapath,
+        download = args.download
+    )
+
     schema_file = "tools/testingSchema.json"  # Update this path as needed
     output_file = Path("tools/generated_classes.py")
-    generate_schema_wrapper(Path(schema_file), output_file)
+    generate_schema_wrapper(schemapath, output_file)
+
+# Main execution
+if __name__ == "__main__":
+    main()

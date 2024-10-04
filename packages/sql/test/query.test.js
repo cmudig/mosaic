@@ -232,6 +232,14 @@ describe('Query', () => {
       'WHERE ("bar" > 50) AND ("bar" < 100)'
     ].join(' ');
 
+    // const obj_query = Query
+    // .select(foo)
+    // .from('data')
+    // .where(gt(bar, 50), lt(bar, 100))
+    // obj_query.toString()
+    // obj_query.toString()
+    // obj_query.toString()
+
     expect(
       Query
         .select(foo)

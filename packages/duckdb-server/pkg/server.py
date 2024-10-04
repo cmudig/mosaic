@@ -8,7 +8,7 @@ import ujson
 from socketify import App, CompressOptions, OpCode
 
 from pkg.bundle import create_bundle, load_bundle
-from pkg.query import get_arrow_bytes, get_json, retrieve
+from pkg.query import get_arrow_bytes, get_json, retrieve, prepare
 
 logger = logging.getLogger(__name__)
 
@@ -75,23 +75,27 @@ class HTTPHandler(Handler):
         self.res.end(str(error))
 
 
-def handle_query(handler: Handler, con, cache, query):
+def handle_query(handler: Handler, con, cache, query, prepared_statements):
     logger.debug(f"{query=}")
 
     start = time.time()
 
     sql = query["sql"]
     command = query["type"]
-
+    params = query["params"]
+    
     try:
         if command == "exec":
             con.execute(sql)
             handler.done()
+        elif command == "prepare":
+            prepare(con, sql, params, prepared_statements)
+            handler.done()
         elif command == "arrow":
-            buffer = retrieve(cache, query, partial(get_arrow_bytes, con))
+            buffer = retrieve(cache, query, partial(get_arrow_bytes, con), prepared_statements)
             handler.arrow(buffer)
         elif command == "json":
-            json = retrieve(cache, query, partial(get_json, con))
+            json = retrieve(cache, query, partial(get_json, con), prepared_statements)
             handler.json(json)
         elif command == "create-bundle":
             create_bundle(con, cache, query.get("queries"), BUNDLE_DIR / query.get("name"))
@@ -127,6 +131,8 @@ def server(con, cache):
     # faster serialization than standard json
     app.json_serializer(ujson)
 
+    prepared_statements = {}
+
     def ws_message(ws, message, opcode):
         handler = SocketHandler(ws)
 
@@ -137,7 +143,7 @@ def server(con, cache):
             handler.error(e)
             return
 
-        handle_query(handler, con, cache, query)
+        handle_query(handler, con, cache, query, prepared_statements)
 
     async def http_handler(res, req):
         res.write_header("Access-Control-Allow-Origin", "*")
@@ -154,10 +160,10 @@ def server(con, cache):
             handler.done()
         elif method == "GET":
             data = ujson.loads(req.get_query("query"))
-            handle_query(handler, con, cache, data)
+            handle_query(handler, con, cache, data, prepared_statements)
         elif method == "POST":
             data = await res.get_json()
-            handle_query(handler, con, cache, data)
+            handle_query(handler, con, cache, data, prepared_statements)
 
     app.ws(
         "/*",

@@ -103,6 +103,10 @@
           Cache Log:
           <button id="cache-log">Print</button>
         </div>
+        <div>
+          Cache Download:
+          <button id="cache-download">Download</button>
+        </div>
       </div>
     </details>
   </header>
@@ -121,6 +125,7 @@
   const indexToggle = document.querySelector('#index');
   const indexState = document.querySelector('#index-state');
   const printLog = document.querySelector('#cache-log');
+  const downloadLog = document.querySelector('#cache-download');
 
   connectorMenu.addEventListener('change', setConnector);
   exampleMenu.addEventListener('change', reload);
@@ -142,6 +147,9 @@
   });
   printLog.addEventListener('click', () => {
     vg.coordinator().manager.cacheLogs?.displayLogsAsTable();
+  });
+  downloadLog.addEventListener('click', () => {
+    vg.coordinator().manager.cacheLogs?.downloadLogs();
   });
 
   setQueryLog();

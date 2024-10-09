@@ -38,7 +38,8 @@ export class DuckDB {
   prepare(sql) {
 		let statement = this.preparedStatements.get(sql);
 		if (statement) return statement;
-		statement = new DuckDBStatement(this.con.prepare(sql));
+		const query = "SELECT * FROM to_arrow_ipc((" + sql + "));";
+		statement = new DuckDBStatement(this.con.prepare(sql), this.con.prepare(query));
 		this.preparedStatements.set(sql, statement);
     return statement;
   }
@@ -81,8 +82,10 @@ export class DuckDB {
 }
 
 export class DuckDBStatement {
-  constructor(statement) {
+  constructor(statement, arrowStatement) {
     this.statement = statement;
+		// We need another statement ot handle arrow calls, https://github.com/duckdb/duckdb-node/issues/113
+		this.arrowStatement = arrowStatement;
   }
 
   finalize() {
@@ -119,7 +122,7 @@ export class DuckDBStatement {
 
   arrowBuffer(params) {
     return new Promise((resolve, reject) => {
-      this.statement.arrowIPCAll(...params, (err, result) => {
+      this.arrowStatement.arrowIPCAll(...params, (err, result) => {
         if (err) {
           reject(err);
         } else {

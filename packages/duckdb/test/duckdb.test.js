@@ -42,19 +42,22 @@ describe('DuckDB', () => {
 	it('can run a prepared statement', async () => {
 		const statement = db.prepare('SELECT ?+? AS foo');
 		const res0 = await statement.query([1,2]);
-		assert.deepEqual(res0, [{foo: 3}]);
+		expect(res0[0]?.foo).toBe(3);
 
 		const res1 = await statement.query([2,3]);
-		assert.deepEqual(res1, [{foo: 5}]);
+		expect(res1[0]?.foo).toBe(5);
 	});
 
 	it('can run a prepared arrow statement', async () => {
+		const buf0 = await db.arrowBuffer('SELECT 1+2 AS foo');
+		const buf1 = await db.arrowBuffer('SELECT 2+3 AS foo');
+
 		const statement = db.prepare('SELECT ?+? AS foo');
 		const res0 = await statement.arrowBuffer([1,2]);
-		assert.deepEqual(res0, [{foo: 3}]);
+		expect(res0).toStrictEqual(buf0);
 
 		const res1 = await statement.arrowBuffer([2,3]);
-		assert.deepEqual(res1, [{foo: 5}]);
+		expect(res1).toStrictEqual(buf1);
 	});
   });
 });

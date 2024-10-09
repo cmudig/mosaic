@@ -411,6 +411,7 @@ export class Query {
     return q;
   }
 
+  // converts Query into an object that contains the generic query string and an array of parameters
   toString() {
     const {
       with: cte, select, distinct, from, sample, where, groupby,
@@ -418,6 +419,8 @@ export class Query {
     } = this.query;
 
     const sql = [];
+
+    let params = []
 
     // WITH
     if (cte.length) {
@@ -444,7 +447,7 @@ export class Query {
 
     // WHERE
     if (where.length) {
-      const clauses = where.map(String).filter(x => x).join(' AND ');
+      const clauses = where.map(c => c.toString(params)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`WHERE ${clauses}`);
     }
 
@@ -463,13 +466,13 @@ export class Query {
 
     // HAVING
     if (having.length) {
-      const clauses = having.map(String).filter(x => x).join(' AND ');
+      const clauses = having.map(c => c.toString(params)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`HAVING ${clauses}`);
     }
 
     // WINDOW
     if (window.length) {
-      const windows = window.map(({ as, expr }) => `"${as}" AS (${expr})`);
+      const windows = window.map(({ as, expr }) => `"${as.toString(params)}" AS (${expr})`);
       sql.push(`WINDOW ${windows.join(', ')}`);
     }
 
@@ -494,7 +497,8 @@ export class Query {
       sql.push(`OFFSET ${offset}`);
     }
 
-    return sql.join(' ');
+    // return {query: sql.join(' '), params: params}
+    return sql.join(' ')
   }
 }
 

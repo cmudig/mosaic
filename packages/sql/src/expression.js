@@ -37,10 +37,12 @@ export class SQLExpression {
    * @param {string[]} [columns=[]] The column dependencies
    * @param {object} [props] Additional properties for this expression.
    */
-  constructor(parts, columns, props) {
+  constructor(parts, columns, queryParams, parts_prepared, props) {
     this._expr = Array.isArray(parts) ? parts : [parts];
+    this._expr_prepared = Array.isArray(parts_prepared) ? parts_prepared : [parts_prepared];
     this._deps = columns || [];
     this.annotate(props);
+    this.params = queryParams;
 
     const params = this._expr.filter(part => isParamLike(part));
     if (params.length > 0) {
@@ -108,10 +110,17 @@ export class SQLExpression {
    * Generate a SQL code string corresponding to this expression.
    * @returns {string} A SQL code string.
    */
-  toString() {
-    return this._expr
-      .map(p => isParamLike(p) && !isSQLExpression(p) ? literalToSQL(p.value) : p)
-      .join('');
+  toString(params) {
+    if (params) {
+      params.push(...(this?.params ?? []));
+      return this._expr_prepared
+                 .map(p => isParamLike(p) && !isSQLExpression(p) ? literalToSQL(p.value, params) : p)
+                 .join('');
+    } else {
+      return this._expr
+                 .map(p => isParamLike(p) && !isSQLExpression(p) ? literalToSQL(p.value) : p)
+                 .join('');
+    }
   }
 
   /**
@@ -134,29 +143,34 @@ function update(expr, callbacks) {
   }
 }
 
-export function parseSQL(strings, exprs) {
+export function parseSQL(strings, exprs, params) {
   const spans = [strings[0]];
+  const spans_prepared = [strings[0]];
   const cols = new Set;
   const n = exprs.length;
   for (let i = 0, k = 0; i < n;) {
     const e = exprs[i];
     if (isParamLike(e)) {
       spans[++k] = e;
+      spans_prepared[k] = e
     } else {
       if (Array.isArray(e?.columns)) {
         e.columns.forEach(col => cols.add(col));
       }
       spans[k] += typeof e === 'string' ? e : literalToSQL(e);
+      spans_prepared[k] += typeof e === 'string' ? e : literalToSQL(e, params);
     }
     const s = strings[++i];
     if (isParamLike(spans[k])) {
       spans[++k] = s;
+      spans_prepared[k] = s;
     } else {
       spans[k] += s;
+      spans_prepared[k] = s;
     }
   }
 
-  return { spans, cols: Array.from(cols) };
+  return { spans, spans_prepared, cols: Array.from(cols) };
 }
 
 /**
@@ -165,6 +179,7 @@ export function parseSQL(strings, exprs) {
  * references), or parameterized values.
  */
 export function sql(strings, ...exprs) {
-  const { spans, cols } = parseSQL(strings, exprs);
-  return new SQLExpression(spans, cols);
+  const params = [];
+  const { spans, spans_prepared, cols } = parseSQL(strings, exprs, params);
+  return new SQLExpression(spans, cols, params, spans_prepared);
 }

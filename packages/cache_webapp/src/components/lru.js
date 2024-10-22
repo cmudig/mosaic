@@ -1,5 +1,20 @@
 import * as Plot from "npm:@observablehq/plot";
 
+export function prase_logs_with_cache(logs_promise, cache) {
+
+    return logs_promise.then(logs => {
+        return logs.map(log => {
+            if (cache.get(log.Query)) {
+                log.CacheStatus = "Hit"
+            } else {
+                cache.set(log.Query, log, parseInt(log.Size, 10))
+                log.CacheStatus = "Miss"
+            }
+            return log
+        })
+    })
+}
+
 export function cache_hit(logs_promise, cache, limit=null) {
     
     return logs_promise.then(logs => {

@@ -7,7 +7,7 @@ import ujson
 from pkg.query import get_arrow_bytes, get_json, get_key, retrieve
 
 
-def create_bundle(con, cache, queries, directory):
+def create_bundle(con, cache, queries, directory, prepared_statements):
     describe_re = re.compile(r"^DESCRIBE ")
     pragma_re = re.compile(r"^PRAGMA ")
     view_re = re.compile(r"^CREATE( TEMP| TEMPORARY)? VIEW")
@@ -47,7 +47,7 @@ def create_bundle(con, cache, queries, directory):
                 get = get_json
             else:
                 raise ValueError(f"Unknown command {command}")
-            result = retrieve(cache, {"sql": sql, "type": sql}, partial(get, con))
+            result = retrieve(cache, {"sql": sql, "type": sql}, partial(get, con), prepared_statements)
             with open(directory / key, "wb") as f:
                 f.write(result)
             manifest["queries"].append(key)

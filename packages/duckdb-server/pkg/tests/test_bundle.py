@@ -23,7 +23,7 @@ def test_bundle(bundle_dir):
 
     assert len(cache) == 0
 
-    create_bundle(con, cache, queries, directory=bundle_dir)
+    create_bundle(con, cache, queries, directory=bundle_dir, prepared_statements={})
 
     assert len(cache) == 0
 

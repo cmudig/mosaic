@@ -98,7 +98,7 @@ def handle_query(handler: Handler, con, cache, query, prepared_statements):
             json = retrieve(cache, query, partial(get_json, con), prepared_statements)
             handler.json(json)
         elif command == "create-bundle":
-            create_bundle(con, cache, query.get("queries"), BUNDLE_DIR / query.get("name"))
+            create_bundle(con, cache, query.get("queries"), BUNDLE_DIR / query.get("name"), prepared_statements)
             handler.done()
         elif command == "load-bundle":
             load_bundle(con, cache, BUNDLE_DIR / query.get("name"))

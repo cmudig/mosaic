@@ -14,7 +14,6 @@ def get_key(sql, command, params=None):
 def prepare(con, sql, params, prepared_statements):
     key = sha256(sql.encode("utf-8")).hexdigest()
     prepare_sql = f'PREPARE "{key}" AS {sql}'
-    print(prepare_sql)
     con.execute(prepare_sql)
     placeholders = ','.join(f'{{{i}}}' for i in range(len(params)))
     prepared_statements[sql] = f'EXECUTE "{key}"({placeholders})'
@@ -43,7 +42,6 @@ def retrieve(cache, query, get, prepared_statements):
 
 def get_arrow(con, sql, params=None):
     if params:
-        print(sql.format(*params))
         return con.query(sql.format(*params)).arrow()
     return con.query(sql).arrow()
 

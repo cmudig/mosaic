@@ -31,19 +31,15 @@ def test_query_arrow():
 def test_prepared():
     con = duckdb.connect()
 
-    my_schema = pa.schema([pa.field("id", pa.int32()), pa.field("name", pa.string())])
-    table = pa.Table.from_pylist([{"id": 1, "name": "Alice"}], schema=my_schema)
-
-    con.register("arrow_table", table)  # Register the PyArrow table as "arrow_table"
-    con.execute("CREATE TABLE users AS SELECT * FROM arrow_table")  # Create the DuckDB table from it
-
-    sql = "SELECT id, name FROM users WHERE id = ?"
+    my_schema = pa.schema([pa.field("foo", pa.int32())])
+    table = pa.Table.from_pylist([{"foo": 3}], schema=my_schema)
 
     prepared_statements = {}
-    params = [1]
+    params = [1, 2]
 
+    sql = "SELECT ?+? AS foo"
     prepare(con, sql, params, prepared_statements)
 
-    assert prepared_statements[sql] == 'EXECUTE "49c45eb88d304ce5838538f26ae93ab0959ae624c02c6ffe1043f360c3014ea4"({0})'
+    assert prepared_statements[sql] == 'EXECUTE "f7d5ef6aeca4caab0ff98217b7f6615fd87f1d592e5b201665f6e174de139309"({0},{1})'
 
     assert get_arrow(con, prepared_statements[sql], params) == table

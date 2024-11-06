@@ -123,7 +123,7 @@ export class Coordinator {
    *  promise.
    */
   exec(query, { priority = Priority.Normal } = {}) {
-    query = Array.isArray(query) ? query.filter(x => x).join(';\n') : query;
+    query = Array.isArray(query) ? query.filter(x => typeof x === "string" ? x : x.toSQL().query).join(';\n') : query;
     return this.manager.request({ type: 'exec', query }, priority);
   }
 

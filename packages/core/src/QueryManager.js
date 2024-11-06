@@ -38,9 +38,15 @@ export class QueryManager {
   async submit(request, result) {
     try {
       const { query, type, cache = false, record = true, options } = request;
-			const params = [];
-      let sql = query ? query.toString(params) : null;
-
+      let sql = null;
+      let params = [];
+      if (query) {
+        if (typeof query === "string") {
+          sql = query;
+        } else {
+          ({ sql, params } = query.toSQL());
+        }
+      }
       // update recorders
       if (record) {
         this.recordQuery(sql);

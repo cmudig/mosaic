@@ -49,7 +49,7 @@ export class SQLExpression {
       // @ts-ignore
       this._params = Array.from(new Set(params));
       this._params.forEach(param => {
-        param.addEventListener('value', () => update(this, this.map?.get('value')));
+        param.addEventListener('value', () => update(this, this.map?.get('value'))); // if one paramlike(responsive), the whole SQL expression is now paramlike
       });
     } else {
       // do not support event listeners if not needed
@@ -94,6 +94,10 @@ export class SQLExpression {
    */
   get column() {
     return this._deps.length ? this._deps[0] : this.columns[0];
+  }
+
+  accept(visitor) {
+    return visitor.visitExpression(this);
   }
 
   /**
@@ -145,13 +149,13 @@ export function parseSQL(strings, exprs, params) {
   const n = exprs.length;
   for (let i = 0, k = 0; i < n;) {
     const e = exprs[i];
-    if (isParamLike(e)) {
+    if (isParamLike(e)) { // param like variables are kept as is
       spans[++k] = e;
     } else {
       if (Array.isArray(e?.columns)) {
         e.columns.forEach(col => cols.add(col));
       }
-      spans[k] += typeof e === 'string' ? e : literalToSQL(e, params);
+      spans[k] += typeof e === 'string' ? e : literalToSQL(e); // should keep the original value since this is not a parameter but a constant value
     }
     const s = strings[++i];
     if (isParamLike(spans[k])) {

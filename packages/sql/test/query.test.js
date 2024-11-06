@@ -2,38 +2,42 @@ import { expect, describe, it } from 'vitest';
 import {
   column, desc, gt, lt, max, min, relation, sql, Query
 } from '../src/index.js';
+import { stubParam } from './stub-param.js';
+import { NonPreparedVisitor, PreparedVisitor } from '../src/visitor.js'
+
+
 
 describe('Query', () => {
   it('selects column name strings', () => {
-    const query = 'SELECT "foo", "bar", "baz" FROM "data"';
+    const query = { query: 'SELECT "foo", "bar", "baz" FROM "data"', params: [] };
 
     expect(
       Query
         .select('foo', 'bar', 'baz')
         .from('data')
-        .toString()
-    ).toBe(query);
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
         .select('foo', 'bar', 'baz')
         .from(relation('data'))
-        .toString()
-    ).toBe(query);
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
         .select(['foo', 'bar', 'baz'])
         .from('data')
-        .toString()
-    ).toBe(query);
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
         .select({ foo: 'foo', bar: 'bar', baz: 'baz' })
         .from('data')
-        .toString()
-    ).toBe(query);
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
@@ -41,35 +45,36 @@ describe('Query', () => {
         .select('bar')
         .select('baz')
         .from('data')
-        .toString()
-    ).toBe(query);
+        .toSQL()
+    ).toStrictEqual(query);
   });
 
   it('selects column ref objects', () => {
     const foo = column('foo');
     const bar = column('bar');
     const baz = column('baz');
+    const query = { query: 'SELECT "foo", "bar", "baz" FROM "data"', params: [] };
 
     expect(
       Query
         .select(foo, bar, baz)
         .from('data')
-        .toString()
-    ).toBe('SELECT "foo", "bar", "baz" FROM "data"');
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
         .select([foo, bar, baz])
         .from('data')
-        .toString()
-    ).toBe('SELECT "foo", "bar", "baz" FROM "data"');
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
         .select({ foo, bar, baz })
         .from('data')
-        .toString()
-    ).toBe('SELECT "foo", "bar", "baz" FROM "data"');
+        .toSQL()
+    ).toStrictEqual(query);
 
     expect(
       Query
@@ -77,20 +82,20 @@ describe('Query', () => {
         .select(bar)
         .select(baz)
         .from('data')
-        .toString()
-    ).toBe('SELECT "foo", "bar", "baz" FROM "data"');
+        .toSQL()
+    ).toStrictEqual(query);
   });
 
   it('selects only the most recent reference', () => {
-    const query = 'SELECT "baz", "foo" + 1 AS "bar" FROM "data"';
+    const query = { query: 'SELECT "baz", "foo" + 1 AS "bar" FROM "data"', params: [] };
 
     expect(
       Query
         .select('foo', 'bar', 'baz')
         .select({ bar: sql`"foo" + 1`, foo: null })
         .from('data')
-        .toString()
-    ).toBe(query);
+        .toSQL()
+    ).toStrictEqual(query);
   });
 
   it('selects distinct columns', () => {
@@ -99,7 +104,8 @@ describe('Query', () => {
         .select('foo', 'bar', 'baz')
         .distinct()
         .from('data')
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT DISTINCT "foo", "bar", "baz" FROM "data"');
   });
 
@@ -110,21 +116,24 @@ describe('Query', () => {
       Query
         .select({ min: min('foo'), max: max('foo') })
         .from('data')
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT MIN("foo") AS "min", MAX("foo") AS "max" FROM "data"');
 
     expect(
       Query
         .select({ min: min(foo), max: max(foo) })
         .from('data')
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT MIN("foo") AS "min", MAX("foo") AS "max" FROM "data"');
 
     expect(
       Query
         .select({ min: min('foo').where(gt('bar', 5)) })
         .from('data')
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT MIN("foo") FILTER (WHERE ("bar" > 5)) AS "min" FROM "data"');
   });
 
@@ -144,7 +153,8 @@ describe('Query', () => {
         .select({ min: min('foo'), max: max('foo'), bar: 'bar', baz: 'baz' })
         .from('data')
         .groupby('bar', 'baz')
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -152,7 +162,8 @@ describe('Query', () => {
         .select({ min: min(foo), max: max(foo), bar: bar, baz: baz })
         .from('data')
         .groupby(bar, baz)
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -160,7 +171,8 @@ describe('Query', () => {
         .select({ min: min(foo), max: max(foo), bar, baz })
         .from('data')
         .groupby([bar, baz])
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -169,7 +181,8 @@ describe('Query', () => {
         .from('data')
         .groupby(bar)
         .groupby(baz)
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
   });
 
@@ -190,7 +203,8 @@ describe('Query', () => {
         .from('data')
         .groupby(bar)
         .having(gt('min', 50), lt('min', 100))
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -199,7 +213,8 @@ describe('Query', () => {
         .from('data')
         .groupby(bar)
         .having([gt('min', 50), lt('min', 100)])
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -209,7 +224,8 @@ describe('Query', () => {
         .groupby(bar)
         .having(gt('min', 50))
         .having(lt('min', 100))
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -218,7 +234,8 @@ describe('Query', () => {
         .from('data')
         .groupby(bar)
         .having(sql`("min" > 50) AND ("min" < 100)`)
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
   });
 
@@ -245,7 +262,8 @@ describe('Query', () => {
         .select(foo)
         .from('data')
         .where(gt(bar, 50), lt(bar, 100))
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -253,7 +271,8 @@ describe('Query', () => {
         .select(foo)
         .from('data')
         .where([gt(bar, 50), lt(bar, 100)])
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -262,7 +281,8 @@ describe('Query', () => {
         .from('data')
         .where(gt(bar, 50))
         .where(lt(bar, 100))
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -270,7 +290,8 @@ describe('Query', () => {
         .select(foo)
         .from('data')
         .where(sql`("bar" > 50) AND ("bar" < 100)`)
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
   });
 
@@ -289,7 +310,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .orderby(bar, desc(baz))
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -297,7 +319,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .orderby([bar, desc(baz)])
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -306,7 +329,8 @@ describe('Query', () => {
         .from('data')
         .orderby(bar)
         .orderby(desc(baz))
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
 
     expect(
@@ -314,7 +338,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .orderby(sql`"bar", "baz" DESC NULLS LAST`)
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
   });
 
@@ -324,7 +349,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .sample(10)
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT * FROM "data" USING SAMPLE 10 ROWS');
 
     expect(
@@ -332,7 +358,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .sample({ rows: 10 })
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT * FROM "data" USING SAMPLE 10 ROWS');
 
     expect(
@@ -340,7 +367,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .sample(0.3)
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT * FROM "data" USING SAMPLE 30 PERCENT');
 
     expect(
@@ -348,7 +376,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .sample({ perc: 30 })
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT * FROM "data" USING SAMPLE 30 PERCENT');
 
     expect(
@@ -356,7 +385,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .sample({ rows: 100, method: 'bernoulli' })
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT * FROM "data" USING SAMPLE 100 ROWS (bernoulli)');
 
     expect(
@@ -364,7 +394,8 @@ describe('Query', () => {
         .select('*')
         .from('data')
         .sample({ rows: 100, method: 'bernoulli', seed: 12345 })
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT * FROM "data" USING SAMPLE 100 ROWS (bernoulli, 12345)');
   });
 
@@ -381,7 +412,8 @@ describe('Query', () => {
           bar: column('b', 'bar')
         })
         .from({ a: 'data1', b: 'data2' })
-        .toString()
+        .toSQL()
+        .query
     ).toBe(query);
   });
 
@@ -391,7 +423,8 @@ describe('Query', () => {
         .select({ lead: sql`lead("foo") OVER "win"` })
         .from('data')
         .window({ win: sql`ORDER BY "foo" ASC` })
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT lead("foo") OVER "win" AS "lead" FROM "data" WINDOW "win" AS (ORDER BY "foo" ASC)');
   });
 
@@ -400,14 +433,16 @@ describe('Query', () => {
       Query
         .select('foo', 'bar')
         .from(Query.select('*').from('data'))
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT "foo", "bar" FROM (SELECT * FROM "data")');
 
     expect(
       Query
         .select('foo', 'bar')
         .from({ a: Query.select('*').from('data') })
-        .toString()
+        .toSQL()
+        .query
     ).toBe('SELECT "foo", "bar" FROM (SELECT * FROM "data") AS "a"');
   });
 
@@ -417,7 +452,8 @@ describe('Query', () => {
         .with({ a: Query.select('*').from('data') })
         .select('foo', 'bar')
         .from('a')
-        .toString()
+        .toSQL()
+        .query
     ).toBe('WITH "a" AS (SELECT * FROM "data") SELECT "foo", "bar" FROM "a"');
 
     expect(
@@ -428,7 +464,8 @@ describe('Query', () => {
         })
         .select('*')
         .from('a', 'b')
-        .toString()
+        .toSQL()
+        .query
     ).toBe([
       'WITH "a" AS (SELECT "foo" FROM "data1"),',
            '"b" AS (SELECT "bar" FROM "data2")',
@@ -442,27 +479,123 @@ describe('Query', () => {
       Query.select('foo', 'bar', 'baz').from('data2')
     ];
 
-    expect(Query.union(q).toString()).toBe(q.join(' UNION '));
-    expect(Query.union(...q).toString()).toBe(q.join(' UNION '));
+    expect(Query.union(q).toSQL().query).toBe(q.join(' UNION '));
+    expect(Query.union(...q).toSQL().query).toBe(q.join(' UNION '));
 
-    expect(Query.unionAll(q).toString()).toBe(q.join(' UNION ALL '));
-    expect(Query.unionAll(...q).toString()).toBe(q.join(' UNION ALL '));
+    expect(Query.unionAll(q).toSQL().query).toBe(q.join(' UNION ALL '));
+    expect(Query.unionAll(...q).toSQL().query).toBe(q.join(' UNION ALL '));
 
-    expect(Query.intersect(q).toString()).toBe(q.join(' INTERSECT '));
-    expect(Query.intersect(...q).toString()).toBe(q.join(' INTERSECT '));
+    expect(Query.intersect(q).toSQL().query).toBe(q.join(' INTERSECT '));
+    expect(Query.intersect(...q).toSQL().query).toBe(q.join(' INTERSECT '));
 
-    expect(Query.except(q).toString()).toBe(q.join(' EXCEPT '));
-    expect(Query.except(...q).toString()).toBe(q.join(' EXCEPT '));
+    expect(Query.except(q).toSQL().query).toBe(q.join(' EXCEPT '));
+    expect(Query.except(...q).toSQL().query).toBe(q.join(' EXCEPT '));
   });
 
   it('supports describe queries', () => {
     const q = Query.select('foo', 'bar').from('data');
-    expect(Query.describe(q).toString()).toBe(`DESCRIBE ${q}`);
+    expect(Query.describe(q).toSQL().query).toBe(`DESCRIBE ${q.toSQL().query}`);
 
     const u = Query.unionAll(
       Query.select('foo', 'bar').from('data1'),
       Query.select('foo', 'bar').from('data2')
     );
-    expect(Query.describe(u).toString()).toBe(`DESCRIBE ${u}`);
+    expect(Query.describe(u).toSQL().query).toBe(`DESCRIBE ${u.toSQL().query}`);
   });
 });
+
+it('perpared test 1', () => {
+  const foo = column('foo');
+  const bar = column('bar');
+  const param1 = stubParam(50);
+  const param2 = stubParam(100);
+
+  const query = [
+    'SELECT MIN("foo") AS "min", "bar"',
+    'FROM "data"',
+    'GROUP BY "bar"',
+    'HAVING ("min" > 50) AND ("min" < 100)'
+  ].join(' ');
+
+  const preparedQueryString = [
+    'SELECT MIN("foo") AS "min", "bar"',
+    'FROM "data"',
+    'GROUP BY "bar"',
+    'HAVING ("min" > ?) AND ("min" < ?)'
+  ].join(' ');
+
+  const preparedQuery = {
+    query: preparedQueryString,
+    params: [50, 100]
+  }
+
+  expect(
+    Query
+      .select({ min: min(foo), bar })
+      .from('data')
+      .groupby(bar)
+      .having(gt('min', param1), lt('min', param2))
+      .toSQL()
+      .query
+  ).toBe(query);
+
+  // prepared set to true
+  expect(
+    Query
+      .select({ min: min(foo), bar })
+      .from('data')
+      .groupby(bar)
+      .having(gt('min', param1), lt('min', param2))
+      .toSQL(new PreparedVisitor())
+  ).toStrictEqual(preparedQuery);
+})
+
+it('nested prepared', () => {
+  const foo = column('foo');
+  const bar = column('bar');
+  const param1 = stubParam(50);
+  const param2 = stubParam(100);
+
+  const query = [
+    'SELECT MIN("foo") AS "min", "bar"',
+    'FROM "data"',
+    'GROUP BY "bar"',
+    'HAVING ("min" > ?) AND ("min" < ?)'
+  ].join(' ');
+
+  const nestedQuery = [
+    'SELECT MIN("foo") AS "min", "bar"',
+    `FROM (${query})`,
+    'GROUP BY "bar"',
+    'HAVING ("min" > ?) AND ("min" < ?)'
+  ].join(' ');
+
+  const result = { query: nestedQuery, params: [50, 100, 50, 100] }
+
+  expect(
+    Query
+      .select({ min: min(foo), bar })
+      .from(Query
+        .select({ min: min(foo), bar })
+        .from('data')
+        .groupby(bar)
+        .having(gt('min', param1), lt('min', param2)))
+      .groupby(bar)
+      .having(gt('min', param1), lt('min', param2))
+      .toSQL(new PreparedVisitor())
+  ).toStrictEqual(result);
+
+  expect(
+    Query
+      .select({ min: min(foo), bar })
+      .from(Query
+        .select({ min: min(foo), bar })
+        .from('data')
+        .groupby(bar)
+        .having(gt('min', param1), lt('min', param2)))
+      .groupby(bar)
+      .having([gt('min', param1), lt('min', param2)])
+      .toSQL(new PreparedVisitor())
+  ).toStrictEqual(result);
+
+})

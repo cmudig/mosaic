@@ -190,7 +190,7 @@ function consolidatedQuery(group, record) {
       const [name] = fields.get(e);
       fieldMap.push([name, as]);
     }
-    record(query.toSQL.query);
+    record(query.toSQL().query);
   }
 
   // use a cloned query as a starting point
@@ -242,7 +242,7 @@ async function processResults(group, cache) {
       : map ? projectResult(data, map)
       : data;
     if (request.cache) {
-      cache.set(request.query.toSQL.query, extract);
+      cache.set(request.query.toSQL().query, extract);
     }
     result.fulfill(extract);
   });

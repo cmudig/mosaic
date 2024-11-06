@@ -475,7 +475,7 @@ export class Query {
 
     // WINDOW
     if (window.length) {
-      const windows = window.map(({ as, expr }) => `"${as.toString(params)}" AS (${expr})`);
+      const windows = window.map(({ as, expr }) => `"${as}" AS (${expr})`);
       sql.push(`WINDOW ${windows.join(', ')}`);
     }
 

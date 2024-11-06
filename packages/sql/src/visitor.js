@@ -26,6 +26,10 @@ export class NonPreparedVisitor extends SQLVisitor {
           })
           .join('');
     }
+
+    getParams() {
+        return []; // no params for non-prepared visitor
+    }
 }
 
 export class PreparedVisitor extends SQLVisitor {

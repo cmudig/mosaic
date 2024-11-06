@@ -80,7 +80,7 @@ function entryGroups(entries, cache) {
  * @returns a key string
  */
 function consolidationKey(query, cache) {
-  const sql = `${query}`;
+  const sql = query.toSQL().query;
   if (query instanceof Query && !cache.get(sql)) {
     if (
       // @ts-ignore
@@ -116,7 +116,7 @@ function consolidationKey(query, cache) {
     }
 
     // key is just the transformed query as SQL
-    return `${q}`;
+    return q.toSQL().query;
   } else {
     // can not analyze query, simply return as string
     return sql;
@@ -157,9 +157,9 @@ function consolidate(group, enqueue, record) {
  */
 function shouldConsolidate(group) {
   if (group.length > 1) {
-    const sql = `${group[0].entry.request.query}`;
+    const sql = group[0].entry.request.query.toSQL().query;
     for (let i = 1; i < group.length; ++i) {
-      if (sql !== `${group[i].entry.request.query}`) {
+      if (sql !== group[i].entry.request.query.toSQL().query) {
         return true;
       }
     }
@@ -190,7 +190,7 @@ function consolidatedQuery(group, record) {
       const [name] = fields.get(e);
       fieldMap.push([name, as]);
     }
-    record(`${query}`);
+    record(query.toSQL.query);
   }
 
   // use a cloned query as a starting point
@@ -242,7 +242,7 @@ async function processResults(group, cache) {
       : map ? projectResult(data, map)
       : data;
     if (request.cache) {
-      cache.set(String(request.query), extract);
+      cache.set(request.query.toSQL.query, extract);
     }
     result.fulfill(extract);
   });

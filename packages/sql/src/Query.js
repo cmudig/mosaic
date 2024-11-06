@@ -35,11 +35,11 @@ export class Query {
   // tentative change, needs double check
   static describe(query) {
     const q = query.clone();
-    const { clone, toSQLString } = q;
+    const { clone, toSQL } = q;
     return Object.assign(q, {
       describe: true,
       clone: () => Query.describe(clone.call(q)),
-      toSQLString: () => `DESCRIBE ${toSQLString.call(q)}`
+      toSQL: () => {return { query: `DESCRIBE ${toSQL.call(q).query}`, params: [] }}
     });
   }
 
@@ -413,25 +413,17 @@ export class Query {
     return q;
   }
 
-  toSQLString(prepared=false, visitor=null) {
+  toSQL(paramVisitor=new NonPreparedVisitor()) {
     const {
       with: cte, select, distinct, from, sample, where, groupby,
       having, window, qualify, orderby, limit, offset
     } = this.query;
 
     const sql = [];
-    let sqlVisitor = visitor;
-    if (sqlVisitor == null){
-      if (prepared){
-        sqlVisitor = new PreparedVisitor();
-      } else {
-        sqlVisitor =  new NonPreparedVisitor()
-      }  
-    }
     
     // WITH
     if (cte.length) {
-      const list = cte.map(({ as, query })=> `"${as}" AS (${query.toSQLString(prepared, sqlVisitor)})`);
+      const list = cte.map(({ as, query })=> `"${as}" AS (${query.toSQL(paramVisitor).query})`);
       sql.push(`WITH ${list.join(', ')}`);
     }
 
@@ -448,8 +440,7 @@ export class Query {
       const rels = from.map(({ as, from }) => {
         let subQuery = from;
         if (isQuery(from)) {
-          subQuery = from.toSQLString(prepared, sqlVisitor);
-          subQuery = typeof subQuery === "string" ? `(${subQuery})` : `(${subQuery.query})`;
+          subQuery = `(${from.toSQL(paramVisitor).query})`;
         }
         const rel = `${subQuery}`;
         return !as || as === from.table ? rel : `${rel} AS "${as}"`;
@@ -459,7 +450,7 @@ export class Query {
 
     // WHERE
     if (where.length) {
-      const clauses = where.map((x) => x.accept(sqlVisitor)).filter(x => x).join(' AND ');
+      const clauses = where.map((x) => x.accept(paramVisitor)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`WHERE ${clauses}`);
     }
 
@@ -478,7 +469,7 @@ export class Query {
 
     // HAVING
     if (having.length) {
-      const clauses = having.map((x) => x.accept(sqlVisitor)).filter(x => x).join(' AND ');
+      const clauses = having.map((x) => x.accept(paramVisitor)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`HAVING ${clauses}`);
     }
 
@@ -490,7 +481,7 @@ export class Query {
 
     // QUALIFY
     if (qualify.length) {
-      const clauses = qualify.map((x) => x.accept(sqlVisitor)).filter(x => x).join(' AND ');
+      const clauses = qualify.map((x) => x.accept(paramVisitor)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`QUALIFY ${clauses}`);
     }
 
@@ -509,11 +500,8 @@ export class Query {
       sql.push(`OFFSET ${offset}`);
     }
 
-    if (prepared) {
-      return { query: sql.join(' '), 
-               params: sqlVisitor.getParams() }
-    }
-    return sql.join(' ')
+    return { query: sql.join(' '), 
+              params: paramVisitor.getParams() }
   }
 }
 
@@ -569,7 +557,7 @@ export class SetOperation {
     return queries;
   }
 
-  toSQLString() {
+  toSQL() {
     const { op, queries, query: { orderby, limit, offset } } = this;
 
     // SUBQUERIES
@@ -590,7 +578,7 @@ export class SetOperation {
       sql.push(`OFFSET ${offset}`);
     }
 
-    return sql.join(' ');
+    return { query: sql.join(' '), params: [] };
   }
 }
 

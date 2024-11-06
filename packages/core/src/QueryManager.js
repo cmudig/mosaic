@@ -44,7 +44,9 @@ export class QueryManager {
         if (typeof query === "string") {
           sql = query;
         } else {
-          ({ sql, params } = query.toSQL());
+          let sqlQuery = query.toSQL();
+          sql = sqlQuery.query;
+          params = sqlQuery.params;
         }
       }
       // update recorders

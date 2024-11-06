@@ -170,7 +170,7 @@ export class Coordinator {
    * @returns {QueryResult} A query result promise.
    */
   createBundle(name, queries, priority = Priority.Low) {
-    const options = { name, queries: queries.map(q => typeof q == 'string' ? {sql: q} : q) };
+    const options = { name, queries: queries.map(q => typeof q == 'string' ? { sql: q } : q) };
     return this.manager.request({ type: 'create-bundle', options }, priority);
   }
 
@@ -245,7 +245,6 @@ export class Coordinator {
     if (fields?.length) {
       client.fieldInfo(await queryFieldInfo(this, fields));
     }
-
     // request data query
     return client.requestQuery();
   }

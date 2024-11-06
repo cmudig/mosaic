@@ -37,11 +37,10 @@ export class SQLExpression {
    * @param {string[]} [columns=[]] The column dependencies
    * @param {object} [props] Additional properties for this expression.
    */
-  constructor(parts, columns, queryParams, props) {
+  constructor(parts, columns, props) {
     this._expr = Array.isArray(parts) ? parts : [parts];
     this._deps = columns || [];
     this.annotate(props);
-    this.params = queryParams
 
     const params = this._expr.filter(part => isParamLike(part));
     if (params.length > 0) {
@@ -113,13 +112,9 @@ export class SQLExpression {
    * Generate a SQL code string corresponding to this expression.
    * @returns {string} A SQL code string.
    */
-  toString(params) {
-
-    if (params) {
-      params.push(...(this?.params ?? []));
-    }
+  toString() {
     return this._expr
-      .map(p => isParamLike(p) && !isSQLExpression(p) ? literalToSQL(p.value, params) : p)
+      .map(p => isParamLike(p) && !isSQLExpression(p) ? literalToSQL(p.value) : p)
       .join('');
   }
 
@@ -143,7 +138,7 @@ function update(expr, callbacks) {
   }
 }
 
-export function parseSQL(strings, exprs, params) {
+export function parseSQL(strings, exprs) {
   const spans = [strings[0]];
   const cols = new Set;
   const n = exprs.length;
@@ -174,7 +169,6 @@ export function parseSQL(strings, exprs, params) {
  * references), or parameterized values.
  */
 export function sql(strings, ...exprs) {
-  const params = [];
-  const { spans, cols } = parseSQL(strings, exprs, params);
-  return new SQLExpression(spans, cols, params);
+  const { spans, cols } = parseSQL(strings, exprs);
+  return new SQLExpression(spans, cols);
 }

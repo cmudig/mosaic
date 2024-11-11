@@ -555,6 +555,8 @@ it('nested prepared', () => {
   const bar = column('bar');
   const param1 = stubParam(50);
   const param2 = stubParam(100);
+  const param3 = stubParam(10);
+  const param4 = stubParam(20);
 
   const query = [
     'SELECT MIN("foo") AS "min", "bar"',
@@ -570,7 +572,7 @@ it('nested prepared', () => {
     'HAVING ("min" > ?) AND ("min" < ?)'
   ].join(' ');
 
-  const result = { query: nestedQuery, params: [50, 100, 50, 100] }
+  const result = { query: nestedQuery, params: [50, 100, 10, 20] }
 
   expect(
     Query
@@ -581,7 +583,7 @@ it('nested prepared', () => {
         .groupby(bar)
         .having(gt('min', param1), lt('min', param2)))
       .groupby(bar)
-      .having(gt('min', param1), lt('min', param2))
+      .having(gt('min', param3), lt('min', param4))
       .toSQL(new PreparedVisitor())
   ).toStrictEqual(result);
 
@@ -594,7 +596,7 @@ it('nested prepared', () => {
         .groupby(bar)
         .having(gt('min', param1), lt('min', param2)))
       .groupby(bar)
-      .having([gt('min', param1), lt('min', param2)])
+      .having([gt('min', param3), lt('min', param4)])
       .toSQL(new PreparedVisitor())
   ).toStrictEqual(result);
 

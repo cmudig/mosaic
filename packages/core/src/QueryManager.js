@@ -2,6 +2,9 @@ import { consolidator } from './QueryConsolidator.js';
 import { lruCache, voidCache } from './util/cache.js';
 import { PriorityQueue } from './util/priority-queue.js';
 import { QueryResult } from './util/query-result.js';
+import { PreparedVisitor } from './../../sql/src/visitor.js';
+
+
 
 export const Priority = { High: 0, Normal: 1, Low: 2 };
 
@@ -44,7 +47,7 @@ export class QueryManager {
         if (typeof query === "string") {
           sql = query;
         } else {
-          let sqlQuery = query.toSQL();
+          let sqlQuery = query.toSQL(new PreparedVisitor());
           sql = sqlQuery.query;
           params = sqlQuery.params;
         }
@@ -54,6 +57,10 @@ export class QueryManager {
         this.recordQuery(sql);
       }
 
+      // [DP] debug
+      if (params.length !== 0) {
+        console.log("1")
+      }
       // check query cache
       if (cache) {
         const cached = this.clientCache.get(sql);
@@ -63,13 +70,28 @@ export class QueryManager {
           return;
         }
       }
+      // [DP] debug
+      if (params.length !== 0) {
+        console.log("2")
+      }
 
       // issue query, potentially cache result
       const t0 = performance.now();
       if (this._logQueries) {
         this._logger.debug('Query', { type, sql, params, ...options });
       }
+      // [DP] debug
+      if (params.length !== 0) {
+        console.log("3")
+        console.log("we have: ", sql, params) // prints  SELECT MAX("HourOfDay") AS "maxHour" FROM "testData" HAVING ("maxHour" > ?) AND ("maxHour" < ?) [ 9, 12 ]
+
+      }
       const data = await this.db.query({ type, sql, params: params.length ? params : undefined, ...options });
+      // [DP] debug
+      // NEVER REACHED HERE
+      if (params.length !== 0) {
+        console.log("4")
+      }
       if (cache) this.clientCache.set(sql, data);
       this._logger.debug(`Request: ${(performance.now() - t0).toFixed(1)}`);
       result.fulfill(data);

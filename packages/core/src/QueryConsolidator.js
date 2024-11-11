@@ -1,5 +1,6 @@
 import { Query, Ref, isDescribeQuery } from '@uwdata/mosaic-sql';
 import { QueryResult } from './util/query-result.js';
+import { PreparedVisitor } from './../../sql/src/visitor.js'
 
 function wait(callback) {
   const method = typeof requestAnimationFrame !== 'undefined'
@@ -80,7 +81,7 @@ function entryGroups(entries, cache) {
  * @returns a key string
  */
 function consolidationKey(query, cache) {
-  const sql = query.toSQL().query;
+  const sql = query.toSQL(new PreparedVisitor()).query;
   if (query instanceof Query && !cache.get(sql)) {
     if (
       // @ts-ignore
@@ -116,7 +117,7 @@ function consolidationKey(query, cache) {
     }
 
     // key is just the transformed query as SQL
-    return q.toSQL().query;
+    return q.toSQL(new PreparedVisitor()).query;
   } else {
     // can not analyze query, simply return as string
     return sql;
@@ -157,9 +158,9 @@ function consolidate(group, enqueue, record) {
  */
 function shouldConsolidate(group) {
   if (group.length > 1) {
-    const sql = group[0].entry.request.query.toSQL().query;
+    const sql = group[0].entry.request.query.toSQL(new PreparedVisitor()).query;
     for (let i = 1; i < group.length; ++i) {
-      if (sql !== group[i].entry.request.query.toSQL().query) {
+      if (sql !== group[i].entry.request.query.toSQL(new PreparedVisitor()).query) {
         return true;
       }
     }
@@ -190,7 +191,7 @@ function consolidatedQuery(group, record) {
       const [name] = fields.get(e);
       fieldMap.push([name, as]);
     }
-    record(query.toSQL().query);
+    record(query.toSQL(new PreparedVisitor()).query);
   }
 
   // use a cloned query as a starting point
@@ -242,7 +243,7 @@ async function processResults(group, cache) {
       : map ? projectResult(data, map)
       : data;
     if (request.cache) {
-      cache.set(request.query.toSQL().query, extract);
+      cache.set(request.query.toSQL(new PreparedVisitor()).query, extract);
     }
     result.fulfill(extract);
   });

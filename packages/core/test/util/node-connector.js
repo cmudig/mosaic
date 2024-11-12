@@ -11,12 +11,21 @@ export function nodeConnector(db = new DuckDB()) {
      * @returns the query result
      */
     query: async query => {
-      const { type, sql } = query;
+      const { type, sql, params } = query;
+			let statement;
+			if (params) {
+				statement = db.prepare(sql);
+			}
       switch (type) {
         case 'exec':
           return db.exec(sql);
         case 'arrow':
-          return decodeIPC(await db.arrowBuffer(sql));
+					if (statement) {
+						return decodeIPC(await statement.arrowBuffer(params));
+					} else {
+						return decodeIPC(await db.arrowBuffer(sql));
+					}
+          // return decodeIPC(await statement?.arrowBuffer.bind(statement, params) ?? db.arrowBuffer.bind(db, sql));
         default:
           return db.query(sql);
       }

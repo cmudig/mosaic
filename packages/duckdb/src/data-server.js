@@ -96,6 +96,7 @@ export function queryHandler(db, queryCache) {
     let query;
     try {
       query = JSON.parse(data);
+      console.log("parsing", query)
     } catch (err) {
       res.error(err, 400);
       return;

@@ -52,15 +52,12 @@ export class QueryManager {
           params = sqlQuery.params;
         }
       }
+      console.log(sql, params)
       // update recorders
       if (record) {
         this.recordQuery(sql);
       }
 
-      // [DP] debug
-      if (params.length !== 0) {
-        console.log("1")
-      }
       // check query cache
       if (cache) {
         const cached = this.clientCache.get(sql);
@@ -70,28 +67,14 @@ export class QueryManager {
           return;
         }
       }
-      // [DP] debug
-      if (params.length !== 0) {
-        console.log("2")
-      }
 
       // issue query, potentially cache result
       const t0 = performance.now();
       if (this._logQueries) {
         this._logger.debug('Query', { type, sql, params, ...options });
       }
-      // [DP] debug
-      if (params.length !== 0) {
-        console.log("3")
-        console.log("we have: ", sql, params) // prints  SELECT MAX("HourOfDay") AS "maxHour" FROM "testData" HAVING ("maxHour" > ?) AND ("maxHour" < ?) [ 9, 12 ]
 
-      }
-      const data = await this.db.query({ type, sql, params: params.length ? params : undefined, ...options });
-      // [DP] debug
-      // NEVER REACHED HERE
-      if (params.length !== 0) {
-        console.log("4")
-      }
+      const data = await this.db.query({ type, sql, params, ...options });
       if (cache) this.clientCache.set(sql, data);
       this._logger.debug(`Request: ${(performance.now() - t0).toFixed(1)}`);
       result.fulfill(data);

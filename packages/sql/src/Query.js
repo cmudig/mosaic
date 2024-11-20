@@ -450,7 +450,7 @@ export class Query {
 
     // WHERE
     if (where.length) {
-      const clauses = where.map((x) => x.accept(paramVisitor)).filter(x => x).join(' AND ');
+      const clauses = where.map((x) => typeof x === "string" ? String(x) : x.accept(paramVisitor)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`WHERE ${clauses}`);
     }
 
@@ -469,7 +469,7 @@ export class Query {
 
     // HAVING
     if (having.length) {
-      const clauses = having.map((x) => x.accept(paramVisitor)).filter(x => x).join(' AND ');
+      const clauses = having.map((x) => typeof x === "string" ? String(x) : x.accept(paramVisitor)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`HAVING ${clauses}`);
     }
 
@@ -481,7 +481,7 @@ export class Query {
 
     // QUALIFY
     if (qualify.length) {
-      const clauses = qualify.map((x) => x.accept(paramVisitor)).filter(x => x).join(' AND ');
+      const clauses = qualify.map((x) => typeof x === "string" ? String(x) : x.accept(paramVisitor)).filter(x => x).join(' AND ');
       if (clauses) sql.push(`QUALIFY ${clauses}`);
     }
 
@@ -561,7 +561,7 @@ export class SetOperation {
     const { op, queries, query: { orderby, limit, offset } } = this;
 
     // SUBQUERIES
-    const sql = [ queries.join(` ${op} `) ];
+    const sql = [ queries.map(x => x.toSQL().query).join(` ${op} `) ];
 
     // ORDER BY
     if (orderby.length) {

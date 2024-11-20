@@ -304,7 +304,7 @@ function dataCubeInfo(clientQuery, active, indexCols, schema) {
   query.query.orderby = [];
 
   // generate creation query string and hash id
-  const create = query.toString();
+  const create = query.toSQL().query;
   const id = (fnv_hash(create) >>> 0).toString(16);
   const table = `${schema}.cube_${id}`;
 

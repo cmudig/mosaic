@@ -140,7 +140,7 @@ it('prepared test', async () => {
   // pending query results
   let pending = [];
   const param1 = stubParam(9);
-  const param2 = stubParam(12);
+  const param2 = stubParam(13);
   // test client class
   class TestClient extends MosaicClient {
     constructor(tableName, columnName, filterBy) {

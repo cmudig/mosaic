@@ -117,7 +117,7 @@ function consolidationKey(query, cache) {
     }
 
     // key is just the transformed query as SQL
-    return q.toSQL(new PreparedVisitor()).query;
+    return q.toSQL().query;
   } else {
     // can not analyze query, simply return as string
     return sql;

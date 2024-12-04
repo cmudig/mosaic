@@ -92,6 +92,9 @@ def handle_query(handler: Handler, con, cache, query, prepared_statements):
             prepare(con, sql, params, prepared_statements)
             handler.done()
         elif command == "arrow":
+            logger.info(prepared_statements)
+            if (params):
+                prepare(con, sql, params, prepared_statements)
             buffer = retrieve(cache, query, partial(get_arrow_bytes, con), prepared_statements)
             handler.arrow(buffer)
         elif command == "json":

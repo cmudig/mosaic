@@ -18,6 +18,7 @@ export class QueryManager {
     this.recorders = [];
     this.pending = null;
     this._consolidate = null;
+    this.submit = this.submit.bind(this);
   }
 
   next() {

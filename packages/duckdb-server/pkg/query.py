@@ -7,12 +7,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_key(sql, command, params=None):
-    string_to_be_hashed = sql + (",".join(params) if params else "")
+    string_to_be_hashed = sql + (",".join(list(map(str, params))) if params else "")
     return f"{sha256(string_to_be_hashed.encode('utf-8')).hexdigest()}.{command}"
 
 
 def prepare(con, sql, params, prepared_statements):
     key = sha256(sql.encode("utf-8")).hexdigest()
+    if (sql in prepared_statements):
+        return
     prepare_sql = f'PREPARE "{key}" AS {sql}'
     con.execute(prepare_sql)
     placeholders = ','.join(f'{{{i}}}' for i in range(len(params)))

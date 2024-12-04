@@ -478,18 +478,20 @@ describe('Query', () => {
       Query.select('foo', 'bar', 'baz').from('data1'),
       Query.select('foo', 'bar', 'baz').from('data2')
     ];
+    const qstr = [ Query.select('foo', 'bar', 'baz').from('data1').toSQL().query,
+      Query.select('foo', 'bar', 'baz').from('data2').toSQL().query]
 
-    expect(Query.union(q).toSQL().query).toBe(q.join(' UNION '));
-    expect(Query.union(...q).toSQL().query).toBe(q.join(' UNION '));
+    expect(Query.union(q).toSQL().query).toBe(qstr.join(' UNION '));
+    expect(Query.union(...q).toSQL().query).toBe(qstr.join(' UNION '));
 
-    expect(Query.unionAll(q).toSQL().query).toBe(q.join(' UNION ALL '));
-    expect(Query.unionAll(...q).toSQL().query).toBe(q.join(' UNION ALL '));
+    expect(Query.unionAll(q).toSQL().query).toBe(qstr.join(' UNION ALL '));
+    expect(Query.unionAll(...q).toSQL().query).toBe(qstr.join(' UNION ALL '));
 
-    expect(Query.intersect(q).toSQL().query).toBe(q.join(' INTERSECT '));
-    expect(Query.intersect(...q).toSQL().query).toBe(q.join(' INTERSECT '));
+    expect(Query.intersect(q).toSQL().query).toBe(qstr.join(' INTERSECT '));
+    expect(Query.intersect(...q).toSQL().query).toBe(qstr.join(' INTERSECT '));
 
-    expect(Query.except(q).toSQL().query).toBe(q.join(' EXCEPT '));
-    expect(Query.except(...q).toSQL().query).toBe(q.join(' EXCEPT '));
+    expect(Query.except(q).toSQL().query).toBe(qstr.join(' EXCEPT '));
+    expect(Query.except(...q).toSQL().query).toBe(qstr.join(' EXCEPT '));
   });
 
   it('supports describe queries', () => {

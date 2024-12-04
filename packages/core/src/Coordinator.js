@@ -48,7 +48,7 @@ export class Coordinator {
     logger = console,
     manager = new QueryManager(),
     cache = true,
-    consolidate = true,
+    consolidate = false,
     indexes = {}
   } = {}) {
     /** @type {QueryManager} */

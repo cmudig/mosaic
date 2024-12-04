@@ -41,7 +41,6 @@ export class SQLExpression {
     this._expr = Array.isArray(parts) ? parts : [parts];
     this._deps = columns || [];
     this.annotate(props);
-
     const params = this._expr.filter(part => isParamLike(part));
     if (params.length > 0) {
       /** @type {ParamLike[]} */

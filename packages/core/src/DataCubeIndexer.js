@@ -3,6 +3,7 @@ import {
 } from '@uwdata/mosaic-sql';
 import { indexColumns } from './util/index-columns.js';
 import { fnv_hash } from './util/hash.js';
+import { stubParam } from '../../sql/src/stub-param.js';
 
 const Skip = { skip: true, result: null };
 
@@ -267,14 +268,39 @@ const BIN = { ceil: 'CEIL', round: 'ROUND' };
 function binInterval(scale, pixelSize, bin) {
   const { type, domain, range, apply, sqlApply } = scaleTransform(scale);
   if (!apply) return; // unsupported scale type
+
   const fn = BIN[`${bin}`.toLowerCase()] || 'FLOOR';
   const lo = apply(Math.min(...domain));
   const hi = apply(Math.max(...domain));
   const a = type === 'identity' ? 1 : Math.abs(range[1] - range[0]) / (hi - lo);
-  const s = a / pixelSize === 1 ? '' : `${a / pixelSize}::DOUBLE * `;
-  const d = lo === 0 ? '' : ` - ${lo}::DOUBLE`;
-  return value => sql`${fn}(${s}(${sqlApply(value)}${d}))::INTEGER`;
+
+  // Determine scale factor and offset
+  const scaleFactor = a / pixelSize !== 1 ? stubParam(a / pixelSize) : null;
+  const offset = lo !== 0 ? stubParam(lo) : null;
+
+  return value => sql`
+    ${fn}(
+      ${scaleFactor ? sql`${scaleFactor}::DOUBLE * ` : sql``} 
+      (${stubParam(sqlApply(value))}
+      ${offset ? sql` - ${offset}::DOUBLE` : sql``})
+    )::INTEGER
+  `;
 }
+
+
+
+// function binInterval(scale, pixelSize, bin) {
+//   const { type, domain, range, apply, sqlApply } = scaleTransform(scale);
+//   if (!apply) return; // unsupported scale type
+
+//   const fn = BIN[`${bin}`.toLowerCase()] || 'FLOOR';
+//   const lo = apply(Math.min(...domain));
+//   const hi = apply(Math.max(...domain));
+//   const a = type === 'identity' ? 1 : Math.abs(range[1] - range[0]) / (hi - lo);
+//   const s = a / pixelSize === 1 ? '' : `${a / pixelSize}::DOUBLE * `;
+//   const d = lo === 0 ? '' : ` - ${lo}::DOUBLE`;
+//   return value => sql`${fn}(${s}(${sqlApply(value)}${d}))::INTEGER`;
+// }
 
 /**
  * Generate data cube table query information.

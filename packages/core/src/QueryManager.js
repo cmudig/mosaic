@@ -2,7 +2,7 @@ import { consolidator } from './QueryConsolidator.js';
 import { lruCache, voidCache } from './util/cache.js';
 import { PriorityQueue } from './util/priority-queue.js';
 import { QueryResult } from './util/query-result.js';
-import { PreparedVisitor } from './../../sql/src/visitor.js';
+import { NonPreparedVisitor, PreparedVisitor } from './../../sql/src/visitor.js';
 
 
 
@@ -13,6 +13,7 @@ export class QueryManager {
     this.queue = new PriorityQueue(3);
     this.db = null;
     this.clientCache = null;
+		this.prepare = true;
     this._logger = null;
     this._logQueries = false;
     this.recorders = [];
@@ -48,9 +49,9 @@ export class QueryManager {
         if (typeof query === "string") {
           sql = query;
         } else {
-          let sqlQuery = query.toSQL(new PreparedVisitor());
-          sql = sqlQuery.query;
-          params = sqlQuery.params;
+					let sqlQuery = query.toSQL(this.prepare ? new PreparedVisitor() : new NonPreparedVisitor());
+					sql = sqlQuery.query;
+					params = sqlQuery.params;
         }
       }
       console.log(sql, params)
@@ -61,7 +62,7 @@ export class QueryManager {
 
       // check query cache
       if (cache) {
-        const cached = this.clientCache.get(sql);
+        const cached = this.clientCache.get(sql + (params ? params.map(String).join(",") : ""));
         if (cached) {
           this._logger.debug('Cache');
           result.fulfill(cached);
@@ -76,7 +77,7 @@ export class QueryManager {
       }
 
       const data = await this.db.query({ type, sql, params, ...options });
-      if (cache) this.clientCache.set(sql, data);
+      if (cache) this.clientCache.set(sql + (params ? params.map(String).join(",") : ""), data);
       this._logger.debug(`Request: ${(performance.now() - t0).toFixed(1)}`);
       result.fulfill(data);
     } catch (err) {

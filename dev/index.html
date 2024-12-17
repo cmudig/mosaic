@@ -88,6 +88,10 @@
           <input id="cache" type="checkbox" checked />
         </div>
         <div>
+          Prepared Statements:
+          <input id="prepare" type="checkbox" checked />
+        </div>
+        <div>
           Query Consolidation:
           <input id="consolidate" type="checkbox" checked />
         </div>
@@ -113,6 +117,7 @@
   const sourceMenu = document.querySelector('#source');
   const qlogToggle = document.querySelector('#query-log');
   const cacheToggle = document.querySelector('#cache');
+  const prepareToggle = document.querySelector('#prepare');
   const consolidateToggle = document.querySelector('#consolidate');
   const indexToggle = document.querySelector('#index');
   const indexState = document.querySelector('#index-state');
@@ -122,6 +127,7 @@
   sourceMenu.addEventListener('change', reload);
   qlogToggle.addEventListener('input', setQueryLog);
   cacheToggle.addEventListener('input', setCache);
+  prepareToggle.addEventListener('input', setPrepare);
   consolidateToggle.addEventListener('input', setConsolidate);
   indexToggle.addEventListener('input', setIndex);
   indexState.addEventListener('click', () => {
@@ -138,6 +144,7 @@
 
   setQueryLog();
   setCache();
+  setPrepare();
   setConsolidate();
   setIndex();
   setConnector();
@@ -153,6 +160,10 @@
 
   function setCache() {
     vg.coordinator().manager.cache(cacheToggle.checked);
+  }
+
+  function setPrepare() {
+    vg.coordinator().manager.prepare = prepareToggle.checked;
   }
 
   function setConsolidate() {

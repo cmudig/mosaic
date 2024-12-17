@@ -48,12 +48,14 @@ export class Coordinator {
     logger = console,
     manager = new QueryManager(),
     cache = true,
+		prepare = true,
     consolidate = false,
     indexes = {}
   } = {}) {
     /** @type {QueryManager} */
     this.manager = manager;
     this.manager.cache(cache);
+		this.manager.prepare = prepare;
     this.manager.consolidate(consolidate);
     this.databaseConnector(db);
     this.logger(logger);

@@ -49,6 +49,8 @@ jobs:
 
       - name: Format and lint
         run: |
+          python -m pip install --upgrade pip
+          pip install hatch pytest pytest-cov
           uv run ruff check
           uv run ruff format --check
 
@@ -62,6 +64,10 @@ jobs:
           uv build
           uv run mypy
           uv run --with pytest-cov pytest --cov-report=term-missing --color=yes --cov=pkg
+
+      - name: Build and test Schema Wrapper
+        run: |
+          uv run pytest test/ --cov=schema_wrapper --cov-report=term-missing
 
   rust:
     name: Test in Rust

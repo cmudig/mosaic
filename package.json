@@ -45,5 +45,9 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@cosmograph/cosmograph": "^1.4.2",
+    "@cosmograph/cosmos": "^2.0.0-beta.20"
+  }
 }

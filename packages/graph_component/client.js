@@ -4,7 +4,7 @@ import {
     CosmographSearch, 
     CosmographTimeline 
   } from '@cosmograph/cosmograph';
-  import { throttle } from './util/throttle.js';
+  import { throttle } from '../core/src/util/throttle.js';
   
   export class CosmographClient {
     constructor(targetElement, histogramElement, searchElement, timelineElement) {
@@ -23,7 +23,8 @@ import {
       this._cosmograph = new Cosmograph(this._element, {
         nodeColor: (node) => node.color || '#b3b3b3',
         nodeSize: (node) => node.size || 4,
-        linkWidth: 1,
+        linkWidth: (link) => link.width || 1,
+        linkColor: (link) => link.color || '#b3b3b3',
         renderHoveredNodeRing: true,
         hoveredNodeRingColor: 'red',
         focusedNodeRingColor: 'yellow',
@@ -51,7 +52,7 @@ import {
   
       // Initialize the Timeline component
       this._timeline = new CosmographTimeline(this._cosmograph, this._timelineElement, {
-        accessor: (node) => node.time,
+        accessor: (link) => link.date,
         animationSpeed: 50,
         events: {
           onAnimationPlay: () => console.log('Animation started'),
@@ -76,9 +77,11 @@ import {
   
     setData(nodes, links) {
       this._cosmograph.setData(nodes, links);
-      this._histogram.setConfig({ data: nodes });
-      this._search.setData(nodes);
-      this._timeline.setConfig({ data: nodes });
+      this._histogram.setConfig(nodes, links);
+      // console.log(typeof this._search);
+      // this._search.setData(nodes, links);
+      this._search._updateData();
+      this._timeline.setConfig(nodes, links);
       return this;
     }
   

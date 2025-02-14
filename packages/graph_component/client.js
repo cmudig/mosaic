@@ -54,6 +54,7 @@ import {
       this._timeline = new CosmographTimeline(this._cosmograph, this._timelineElement, {
         accessor: (link) => link.date,
         animationSpeed: 50,
+        showAnimationControls: true,
         events: {
           onAnimationPlay: () => console.log('Animation started'),
           onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
@@ -75,13 +76,43 @@ import {
       return this;
     }
   
+    // setData(nodes, links) {
+    //   this._cosmograph.setData(nodes, links);
+    //   this._histogram.setConfig(nodes, links);
+      
+    //   // console.log(typeof this._search);
+    //   // this._search.setData(nodes, links);
+    //   this._search._updateData();
+    //   this._timeline.setConfig(nodes, links);
+    //   return this;
+    // }
     setData(nodes, links) {
       this._cosmograph.setData(nodes, links);
-      this._histogram.setConfig(nodes, links);
-      // console.log(typeof this._search);
-      // this._search.setData(nodes, links);
+      if (!nodes || nodes.length === 0) return;
+    
+      // Now only set accessor and barCount, no barHeight
+      this._histogram.setConfig({
+        accessor: (node) => node.size,
+        barCount: 20 // Adjust bin count as desired
+      });
+    
+      // This triggers the new histogram to render
+      // based on the binned distribution of node sizes.
       this._search._updateData();
-      this._timeline.setConfig(nodes, links);
+      // this._timeline.setConfig(nodes, links);
+      this._timeline.setConfig(
+        {
+          accessor: (link) => link.date,
+          animationSpeed: 50,
+          showAnimationControls: true,   // ensures the play button is shown
+          events: {
+            onAnimationPlay: () => console.log('Animation started'),
+            onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
+          }
+        },
+        nodes,
+        links
+      );
       return this;
     }
   

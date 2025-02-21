@@ -5,7 +5,7 @@ import {
     CosmographTimeline 
   } from '@cosmograph/cosmograph';
   import { throttle } from '../core/src/util/throttle.js';
-  import { search, plot, width, height, xScale, yScale, rectY } from '@uwdata/vgplot';
+  import { search, plot, width, height, xScale, yScale, rect, barY, padding } from '@uwdata/vgplot';
   import { Param } from '@uwdata/mosaic-core';
   import { nodes as allNodes, links as allLinks } from '../graph_component/dummy_data.js';
 
@@ -51,21 +51,38 @@ import {
         as: this._searchParam
       });
 
+      // Default "contains" search on change event
       this._searchParam.addEventListener('value', (value) => {
-        const filtered = this.filterData(value);
+        // Only perform contains search if an exact search was not triggered
+        if (!this._exactSearchTriggered) {
+          const filtered = this.filterData(value);
+          this.setData(filtered.nodes, filtered.links);
+        }
+        // Reset flag after handling
+        this._exactSearchTriggered = false;
+      });
+
+      this._enterButton = document.createElement('button');
+      this._enterButton.textContent = 'Exact Search';
+      this._searchElement.appendChild(this._enterButton);
+      this._enterButton.addEventListener('click', () => {
+        const value = this._searchParam.value;
+        const filtered = this.filterDataExact(value);
         this.setData(filtered.nodes, filtered.links);
       });
 
       // Initialize the Timeline component
-      this._timeline = new CosmographTimeline(this._cosmograph, this._timelineElement, {
-        accessor: (link) => link.date,
-        animationSpeed: 50,
-        showAnimationControls: true,
-        events: {
-          onAnimationPlay: () => console.log('Animation started'),
-          onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
-        },
-      });
+      this._timeline = this.createTimeline(this._allLinks);
+      this._timelineElement.appendChild(this._timeline);
+      // this._timeline = new CosmographTimeline(this._cosmograph, this._timelineElement, {
+      //   accessor: (link) => link.date,
+      //   animationSpeed: 50,
+      //   showAnimationControls: true,
+      //   events: {
+      //     onAnimationPlay: () => console.log('Animation started'),
+      //     onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
+      //   },
+      // });
   
       // Throttle updates for performance optimization
       this._requestUpdate = throttle(() => this.requestQuery(), true);
@@ -78,33 +95,37 @@ import {
     }
     
     createHistogram(nodes) {
-      const sizes = nodes.map(node => node.size || 0);
-      const minSize = Math.min(...sizes);
-      const maxSize = Math.max(...sizes);
-      const binCount = 20;
-      const binWidth = (maxSize - minSize) / binCount || 1;
-      const bins = Array(binCount).fill(0);
-    
-      sizes.forEach(size => {
-        const binIndex = Math.min(Math.floor((size - minSize) / binWidth), binCount - 1);
-        bins[binIndex]++;
-      });
-    
-      const binData = bins.map((count, index) => ({
-        binStart: minSize + index * binWidth,
-        binEnd: minSize + (index + 1) * binWidth,
-        count
+      const barData = nodes.map(node => ({
+        name: node.name,
+        size: node.size || 0
+      }));
+
+      return plot(
+        barY(barData, { x: "name", y: "size", fill: "steelblue" }),
+        width(1000),
+        height(200),
+        xScale("band"),
+        yScale("linear"),
+        padding(0.1)
+      );
+    }
+
+    createTimeline(links) {
+      const barData = links.map(link => ({
+        date: new Date(link.date),
+        width: link.width || 1
       }));
     
-      const maxCount = Math.max(...bins);
+      // Sort by date to display bars in chronological order
+      barData.sort((a, b) => a.date - b.date);
+    
       return plot(
-        rectY(binData, { x: "binStart", x2: "binEnd", y: "count", fill: "steelblue" }),
-        width(600),
+        barY(barData, { x: "date", y: "width", fill: "steelblue" }),
+        width(1000),
         height(200),
-        // xScale({ type: "linear", domain: [minSize, maxSize] }),
-        xScale("linear"),
-        yScale("linear")
-        // yScale({ type: "linear", domain: [0, maxCount] })
+        xScale("band"),
+        yScale("linear"),
+        padding(0.1)
       );
     }
 
@@ -140,20 +161,22 @@ import {
       this._histogram = this.createHistogram(nodes);
       this._histogramElement.appendChild(this._histogram);
     
-    
-      this._timeline.setConfig(
-        {
-          accessor: (link) => link.date,
-          animationSpeed: 50,
-          showAnimationControls: true,
-          events: {
-            onAnimationPlay: () => console.log('Animation started'),
-            onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
-          }
-        },
-        nodes,
-        links
-      );
+      this._timelineElement.innerHTML = '';
+      this._timeline = this.createTimeline(links);
+      this._timelineElement.appendChild(this._timeline);
+      // this._timeline.setConfig(
+      //   {
+      //     accessor: (link) => link.date,
+      //     animationSpeed: 50,
+      //     showAnimationControls: true,
+      //     events: {
+      //       onAnimationPlay: () => console.log('Animation started'),
+      //       onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
+      //     }
+      //   },
+      //   nodes,
+      //   links
+      // );
       return this;
     }
   

@@ -1,11 +1,3 @@
-const randomIntFromInterval = (min, max) => {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-};
-
-const getRandDate = () => {
-    return new Date(randomIntFromInterval(0, 10000000));
-};
-
 export const nodes = [
     { id: '1', name: 'Node 1', size: 1, color: '#ff0000', value: 1 },
     { id: '2', name: 'Node 2', size: 2, color: '#00ff00', value: 2 },

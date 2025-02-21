@@ -5,7 +5,10 @@ import {
     CosmographTimeline 
   } from '@cosmograph/cosmograph';
   import { throttle } from '../core/src/util/throttle.js';
-  
+  import { search, plot, width, height, xScale, yScale, rectY } from '@uwdata/vgplot';
+  import { Param } from '@uwdata/mosaic-core';
+  import { nodes as allNodes, links as allLinks } from '../graph_component/dummy_data.js';
+
   export class CosmographClient {
     constructor(targetElement, histogramElement, searchElement, timelineElement) {
       // Create containers for all components
@@ -31,25 +34,28 @@ import {
         showDynamicLabels: true,
         backgroundColor: '#222222',
       });
-  
+
+      this._allNodes = allNodes;
+      this._allLinks = allLinks;
       // Initialize the Histogram component
-      this._histogram = new CosmographHistogram(this._cosmograph, this._histogramElement, {
-        accessor: (node) => node.size,
-        barCount: 30,
-      });
+      this._histogram = this.createHistogram(this._allNodes);
+      this._histogramElement.appendChild(this._histogram);
+  
   
       // Initialize the Search component
-      this._search = new CosmographSearch(this._cosmograph, this._searchElement, {
-        accessors: [
-          { label: 'name', accessor: (node) => node.name },
-          { label: 'value', accessor: (node) => node.value },
-        ],
-        maxVisibleItems: 5,
-        events: {
-          onSelect: (node) => this.zoomToNode(node),
-        },
+      this._searchParam = new Param();
+      this._search = search({
+        element: this._searchElement,
+        label: 'Search Nodes',
+        type: 'contains',
+        as: this._searchParam
       });
-  
+
+      this._searchParam.addEventListener('value', (value) => {
+        const filtered = this.filterData(value);
+        this.setData(filtered.nodes, filtered.links);
+      });
+
       // Initialize the Timeline component
       this._timeline = new CosmographTimeline(this._cosmograph, this._timelineElement, {
         accessor: (link) => link.date,
@@ -68,43 +74,78 @@ import {
       this._cosmograph.onClick = this.onClick.bind(this);
       this._cosmograph.onZoom = this.onZoom.bind(this);
       this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
+      this.setData(this._allNodes, this._allLinks);
     }
-  
+    
+    createHistogram(nodes) {
+      const sizes = nodes.map(node => node.size || 0);
+      const minSize = Math.min(...sizes);
+      const maxSize = Math.max(...sizes);
+      const binCount = 20;
+      const binWidth = (maxSize - minSize) / binCount || 1;
+      const bins = Array(binCount).fill(0);
+    
+      sizes.forEach(size => {
+        const binIndex = Math.min(Math.floor((size - minSize) / binWidth), binCount - 1);
+        bins[binIndex]++;
+      });
+    
+      const binData = bins.map((count, index) => ({
+        binStart: minSize + index * binWidth,
+        binEnd: minSize + (index + 1) * binWidth,
+        count
+      }));
+    
+      const maxCount = Math.max(...bins);
+      return plot(
+        rectY(binData, { x: "binStart", x2: "binEnd", y: "count", fill: "steelblue" }),
+        width(600),
+        height(200),
+        // xScale({ type: "linear", domain: [minSize, maxSize] }),
+        xScale("linear"),
+        yScale("linear")
+        // yScale({ type: "linear", domain: [0, maxCount] })
+      );
+    }
+
+    filterData(searchValue) {
+      if (!searchValue) {
+        return { nodes: this._allNodes, links: this._allLinks };
+      }
+    
+      const lowerSearch = searchValue.toLowerCase();
+      const filteredNodes = this._allNodes.filter(node =>
+        node.name.toLowerCase().includes(lowerSearch)
+      );
+    
+      const nodeIds = new Set(filteredNodes.map(node => node.id));
+      const filteredLinks = this._allLinks.filter(link =>
+        nodeIds.has(link.source) && nodeIds.has(link.target)
+      );
+    
+      return { nodes: filteredNodes, links: filteredLinks };
+    }
+
     /** Configuration Methods */
     setConfig(config) {
       this._cosmograph.setConfig(config);
       return this;
     }
   
-    // setData(nodes, links) {
-    //   this._cosmograph.setData(nodes, links);
-    //   this._histogram.setConfig(nodes, links);
-      
-    //   // console.log(typeof this._search);
-    //   // this._search.setData(nodes, links);
-    //   this._search._updateData();
-    //   this._timeline.setConfig(nodes, links);
-    //   return this;
-    // }
     setData(nodes, links) {
       this._cosmograph.setData(nodes, links);
       if (!nodes || nodes.length === 0) return;
     
-      // Now only set accessor and barCount, no barHeight
-      this._histogram.setConfig({
-        accessor: (node) => node.size,
-        barCount: 20 // Adjust bin count as desired
-      });
+      this._histogramElement.innerHTML = '';
+      this._histogram = this.createHistogram(nodes);
+      this._histogramElement.appendChild(this._histogram);
     
-      // This triggers the new histogram to render
-      // based on the binned distribution of node sizes.
-      this._search._updateData();
-      // this._timeline.setConfig(nodes, links);
+    
       this._timeline.setConfig(
         {
           accessor: (link) => link.date,
           animationSpeed: 50,
-          showAnimationControls: true,   // ensures the play button is shown
+          showAnimationControls: true,
           events: {
             onAnimationPlay: () => console.log('Animation started'),
             onBarHover: (start, end) => console.log(`Hovered from ${start} to ${end}`),
@@ -232,4 +273,3 @@ import {
       console.log('Graph instance destroyed');
     }
   }
-  

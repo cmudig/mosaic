@@ -1,5 +1,30 @@
+:root {
+  --background-color: #ffffff;
+  --text-color: #000000;
+  --header-background: #ffffff;
+  --header-text-color: #111;
+  --border-color: #ccc;
+  --hover-background: #eef;
+  --table-header-background: #fff;
+  --table-row-hover: #eef;
+}
+
+.dark-mode {
+  --background-color: #222222;
+  --text-color: #ffffff;
+  --header-background: #333333;
+  --header-text-color: #ffffff;
+  --border-color: #555555;
+  --hover-background: #444;
+  --table-header-background: #333333;
+  --table-row-hover: #444;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "avenir next", avenir, helvetica, "helvetica neue", ubuntu, roboto, noto, "segoe ui", arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 h1, h2 { font-size: 16px; }
@@ -107,4 +132,37 @@ td, tr:not(:last-child) th {
 td {
   color: #444;
   vertical-align: top;
+}
+
+/* Button Styling */
+button {
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  margin: 10px;
+  background-color: #007BFF;
+  color: white;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Theme Toggle Button */
+#theme-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: #007BFF;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  z-index: 1000;
+}
+
+#theme-toggle:hover {
+  background-color: #0056b3;
 }

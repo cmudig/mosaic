@@ -5,8 +5,8 @@ import {
   CosmographTimeline 
 } from '@cosmograph/cosmograph';
 import { throttle } from '../core/src/util/throttle.js';
-import { search, plot, width, height, xScale, yScale, rect, barY, padding } from '@uwdata/vgplot';
-import { Param } from '@uwdata/mosaic-core';
+import { search, plot, width, height, xScale, yScale, barY, padding, toggle, highlight } from '@uwdata/vgplot';
+import { Param, Selection } from '@uwdata/mosaic-core';
 import { nodes as allNodes, links as allLinks } from '../graph_component/dummy_data.js';
 
 export class CosmographClient {
@@ -64,6 +64,26 @@ export class CosmographClient {
       this._exactSearchTriggered = false;
     });
 
+    // this._searchParam.addEventListener('value', (searchValue) => {
+    //   // 1) Figure out which bar names match
+    //   const lowerSearch = (searchValue || "").toLowerCase();
+    //   const matchedNames = this._allNodes
+    //     .filter(n => n.name.toLowerCase().includes(lowerSearch))
+    //     .map(n => n.name);
+    
+    //   // 2) Build a clause for the highlight selection
+    //   //    E.g., "WHERE name IN ('Foo', 'Bar')"
+    //   const clause = {
+    //     type: 'in',
+    //     field: 'name',
+    //     values: matchedNames
+    //   };
+    
+    //   // 3) Update the searchHighlightSelection
+    //   this._searchHighlightSelection.update(clause);
+    // });
+    
+
     this._enterButton = document.createElement('button');
     this._enterButton.textContent = 'Exact Search';
     this._searchElement.appendChild(this._enterButton);
@@ -90,6 +110,45 @@ export class CosmographClient {
     this._cosmograph.onZoom = this.onZoom.bind(this);
     this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
     this.setData(this._allNodes, this._allLinks);
+
+    this._histogramSelection = new Selection();
+
+    // clause passed to extractValues: 
+    // 0: ['Node 4']
+    // length: 1
+    this._histogramSelection.addEventListener('value', (clause) => {
+      const clickedNames = clause[0];
+      console.log('Clicked names:', clickedNames);
+      const filteredNodes = this._allNodes.filter(n => clickedNames.includes(n.name));
+      const filteredLinks = this._allLinks.filter(
+        l => filteredNodes.some(fn => fn.id === l.source || fn.id === l.target)
+      );
+      this._cosmograph.setData(filteredNodes, filteredLinks);
+    });
+    
+    // Initialize timeline selection TODO
+    this._timelineSelection = new Selection();
+
+    this._timelineSelection.addEventListener('value', (clause) => {
+      console.log('Timeline selection:', clause);
+      const clickedDates = clause[0]; // Extract clicked dates
+      console.log('Clicked dates:', clickedDates);
+
+      // Filter links that match selected dates
+      const filteredLinks = this._allLinks.filter(l => clickedDates.includes(l.date));
+
+      // Extract all nodes that are part of the filtered links
+      const filteredNodeIds = new Set(
+        filteredLinks.flatMap(l => [l.source, l.target])
+      );
+      const filteredNodes = this._allNodes.filter(n => filteredNodeIds.has(n.id));
+
+      // Update Cosmograph with filtered nodes and links
+      this._cosmograph.setData(filteredNodes, filteredLinks);
+    });
+
+    // this._searchHighlightSelection = new Selection();
+
   }
   
   filterData(searchValue) {
@@ -161,7 +220,6 @@ export class CosmographClient {
     this._histogram = this.createHistogram(nodesForHistogram);
     this._histogramElement.appendChild(this._histogram);
 
-    // similarly for timeline, etc.
     this._timelineElement.innerHTML = '';
     const linksForTimeline = allLinksWithMatchInfo && allLinksWithMatchInfo.length
       ? allLinksWithMatchInfo
@@ -184,8 +242,16 @@ export class CosmographClient {
         x: "name",
         y: "size",
         fill: "steelblue",
-        // only highlight matched ones if you want them dimmer
         opacity: barData.map(d => d.matched ? 1 : 0.2)
+      }),
+      // highlight({
+      //   by: this._searchHighlightSelection,
+      //   // Optionally customize dimming:
+      //   // channels: { opacity: 0.3, fill: '#999' }
+      // }),
+      toggle({
+        as: this._histogramSelection,
+        channels: ["x"]
       }),
       width(1000),
       height(200),
@@ -207,7 +273,17 @@ export class CosmographClient {
     barData.sort((a, b) => a.date - b.date);
   
     return plot(
-      barY(barData, { x: "date", y: "width", fill: "steelblue", opacity: barData.map(d => d.matched ? 1 : 0.2) }),
+      barY(barData, { 
+        x: "date", 
+        y: "width", 
+        fill: "steelblue", 
+        opacity: barData.map(d => d.matched ? 1 : 0.2) 
+      }),
+      // timeline selection TODO
+      toggle({
+        as: this._timelineSelection,
+        channels: ["x"]
+      }),
       width(1000),
       height(200),
       xScale("band"),
@@ -338,3 +414,5 @@ export class CosmographClient {
     console.log('Graph instance destroyed');
   }
 }
+
+

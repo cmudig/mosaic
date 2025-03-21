@@ -1,17 +1,15 @@
 import { 
   Cosmograph, 
-  CosmographHistogram, 
-  CosmographSearch, 
-  CosmographTimeline 
 } from '@cosmograph/cosmograph';
 import { throttle } from '../core/src/util/throttle.js';
-import { search, plot, width, height, xScale, yScale, barY, padding, toggle, highlight } from '@uwdata/vgplot';
-import { Param, Selection } from '@uwdata/mosaic-core';
-import { nodes as allNodes, links as allLinks } from '../graph_component/dummy_data.js';
+import * as vg from '@uwdata/vgplot';
+import { Param, Selection, clausePoints } from '@uwdata/mosaic-core';
+import { MosaicClient } from '../core/src/MosaicClient.js';
+import { Query } from '@uwdata/mosaic-sql';
 
-export class CosmographClient {
+export class CosmographClient extends MosaicClient {
   constructor(targetElement, histogramElement, searchElement, timelineElement) {
-    // Create containers for all components
+    super();
     this._element = targetElement || document.createElement('div');
     this._histogramElement = histogramElement || document.createElement('div');
     this._searchElement = searchElement || document.createElement('div');
@@ -22,7 +20,6 @@ export class CosmographClient {
     document.body.appendChild(this._searchElement);
     document.body.appendChild(this._timelineElement);
 
-    // Initialize the main Cosmograph instance
     this._cosmograph = new Cosmograph(this._element, {
       nodeColor: (node) => node.color || '#b3b3b3',
       nodeSize: (node) => node.size || 4,
@@ -35,72 +32,15 @@ export class CosmographClient {
       backgroundColor: '#222222',
     });
 
-    this._allNodes = allNodes;
-    this._allLinks = allLinks;
-    // Initialize the Histogram component
-    this._histogram = this.createHistogram(this._allNodes);
-    this._histogramElement.appendChild(this._histogram);
+    this._searchSelection = new Selection();
+    this._histogramSelection = new Selection();
+    this._timelineSelection = new Selection();
 
-
-    // Initialize the Search component
-    this._searchParam = new Param();
-    this._search = search({
-      element: this._searchElement,
-      label: 'Search Nodes',
-      type: 'contains',
-      as: this._searchParam
-    });
-
-    this._searchParam.addEventListener('value', (value) => {
-      if (!this._exactSearchTriggered) {
-        const filtered = this.filterData(value);
-        this.setData(
-          filtered.nodes, 
-          filtered.links, 
-          filtered.allNodesWithMatchInfo, 
-          filtered.allLinksWithMatchInfo
-        );
-      }
-      this._exactSearchTriggered = false;
-    });
-
-    // this._searchParam.addEventListener('value', (searchValue) => {
-    //   // 1) Figure out which bar names match
-    //   const lowerSearch = (searchValue || "").toLowerCase();
-    //   const matchedNames = this._allNodes
-    //     .filter(n => n.name.toLowerCase().includes(lowerSearch))
-    //     .map(n => n.name);
-    
-    //   // 2) Build a clause for the highlight selection
-    //   //    E.g., "WHERE name IN ('Foo', 'Bar')"
-    //   const clause = {
-    //     type: 'in',
-    //     field: 'name',
-    //     values: matchedNames
-    //   };
-    
-    //   // 3) Update the searchHighlightSelection
-    //   this._searchHighlightSelection.update(clause);
-    // });
-    
-
-    this._enterButton = document.createElement('button');
-    this._enterButton.textContent = 'Exact Search';
-    this._searchElement.appendChild(this._enterButton);
-    this._enterButton.addEventListener('click', () => {
-      const value = this._searchParam.value;
-      const filtered = this.filterDataExact(value);
-      this.setData(
-        filtered.nodes, 
-        filtered.links, 
-        filtered.allNodesWithMatchInfo, 
-        filtered.allLinksWithMatchInfo
-      );
-    });
-
-    // Initialize the Timeline component
-    this._timeline = this.createTimeline(this._allLinks);
-    this._timelineElement.appendChild(this._timeline);
+    // Initialize histogram and timeline placeholders
+    this._histogramData = [];
+    this._histogram = null;
+    this._timelineData = [];
+    this._timeline = null;
 
     // Throttle updates for performance optimization
     this._requestUpdate = throttle(() => this.requestQuery(), true);
@@ -109,56 +49,65 @@ export class CosmographClient {
     this._cosmograph.onClick = this.onClick.bind(this);
     this._cosmograph.onZoom = this.onZoom.bind(this);
     this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
-    this.setData(this._allNodes, this._allLinks);
+  }
 
-    this._histogramSelection = new Selection();
-
-    // clause passed to extractValues: 
-    // 0: ['Node 4']
-    // length: 1
-    this._histogramSelection.addEventListener('value', (clause) => {
-      const clickedNames = clause[0];
-      console.log('Clicked names:', clickedNames);
-      const filteredNodes = this._allNodes.filter(n => clickedNames.includes(n.name));
-      const filteredLinks = this._allLinks.filter(
-        l => filteredNodes.some(fn => fn.id === l.source || fn.id === l.target)
-      );
-      this._cosmograph.setData(filteredNodes, filteredLinks);
-    });
-    
-    // Initialize timeline selection TODO
-    this._timelineSelection = new Selection();
-
-    this._timelineSelection.addEventListener('value', (clause) => {
-      console.log('Timeline selection:', clause);
-      const clickedDates = clause[0]; // Extract clicked dates
-      console.log('Clicked dates:', clickedDates);
-
-      // Filter links that match selected dates
-      const filteredLinks = this._allLinks.filter(l => clickedDates.includes(l.date));
-
-      // Extract all nodes that are part of the filtered links
-      const filteredNodeIds = new Set(
-        filteredLinks.flatMap(l => [l.source, l.target])
-      );
-      const filteredNodes = this._allNodes.filter(n => filteredNodeIds.has(n.id));
-
-      // Update Cosmograph with filtered nodes and links
-      this._cosmograph.setData(filteredNodes, filteredLinks);
-    });
-
-    // this._searchHighlightSelection = new Selection();
-
+  fields() {
+    // Return an array of field descriptors for the coordinator to gather stats
+    return [
+      { table: 'links', column: 'source', stats: [] },
+      { table: 'links', column: 'target', stats: [] }
+      // add more if you want
+    ];
   }
   
-  filterData(searchValue) {
-    const lowerSearch = (searchValue || '').toLowerCase();
-    const matchedIds = new Set(
-      this._allNodes
-        .filter(n => n.name.toLowerCase().includes(lowerSearch))
-        .map(n => n.id)
-    );
-    
+  fieldInfo(info) {
+    // The coordinator will call this with stats about each field listed in fields().
+    // For example, you could store them if needed:
+    this._fieldInfo = info;
+    console.log('Got field info from coordinator:', info);
+    return this;
+  }
+
+  // query(filter) {
+  //   // Return the SQL or Mosaic query object to run
+  //   return {
+  //     sql: 'SELECT source, target, color, width FROM links'
+  //   };
+  // }
+  query(filter = []) {
+    return Query.from('links').select('source', 'target', 'color', 'width').where(filter);
+  }
+
+  // queryResult(data) {
+  //   // Called when the query completes
+  //   // e.g. store the data or render your UI
+  //   console.log('Data from DB:', data);
+  //   return this;
+  // }
+
+  queryResult(data) {
+    const rows = data.toArray();
+    const links = rows.map(row => ({
+      source: row.source,
+      target: row.target,
+      color: row.color,
+      width: row.width
+    }));
+    const nodeIds = new Set();
+    links.forEach(link => {
+      nodeIds.add(link.source);
+      nodeIds.add(link.target);
+    });
+    const nodes = Array.from(nodeIds).map(id => ({ id }));
+    this.setData(nodes, links, nodes, links);
+    return this;
+  }
+
+  async applySelection(clause) {
+    const predicate = await this._searchSelection.predicate();
+    const matchedNodes = this._allNodes.filter(node => predicate(node));
+    const matchedIds = new Set(matchedNodes.map(n => n.id));
+
     const filteredNodes = this._allNodes.filter(n => matchedIds.has(n.id));
     const filteredLinks = this._allLinks.filter(
       l => matchedIds.has(l.source) && matchedIds.has(l.target)
@@ -182,7 +131,28 @@ export class CosmographClient {
     };
   }
 
-  // Exact search: returns nodes whose names exactly match the search value
+  updateHighlightSelection(allNodesWithMatchInfo) {
+    const matchedNames = allNodesWithMatchInfo
+      .filter(n => n.matched)
+      .map(n => n.name);
+
+    const fields = ['name'];
+    const value = matchedNames.map(name => [name]);
+    const clause = clausePoints(fields, value, { source: this });
+
+    console.log('Highlight clause:', clause);
+    console.log('Before update, Highlight selection:', this._searchSelection.value);
+
+    this._searchSelection.update(clause);
+
+    console.log('After update, Highlight selection:', this._searchSelection.value);
+
+    // Update histogram data
+    this._histogramElement.innerHTML = '';
+    this._histogram = this.createHistogram(allNodesWithMatchInfo);
+    this._histogramElement.appendChild(this._histogram);
+  }
+
   filterDataExact(searchValue) {
     if (!searchValue) {
       return { nodes: this._allNodes, links: this._allLinks };
@@ -211,21 +181,32 @@ export class CosmographClient {
   }
 
   setData(nodes, links, allNodesWithMatchInfo, allLinksWithMatchInfo) {
+    this._allNodes = nodes;
+    this._allLinks = links;
+    console.log('Data set:', nodes, links);
     this._cosmograph.setData(nodes, links);
 
-    this._histogramElement.innerHTML = '';
+    // Update histogram data
     const nodesForHistogram = allNodesWithMatchInfo && allNodesWithMatchInfo.length
       ? allNodesWithMatchInfo
       : nodes;
+    this._histogramElement.innerHTML = '';
     this._histogram = this.createHistogram(nodesForHistogram);
     this._histogramElement.appendChild(this._histogram);
 
-    this._timelineElement.innerHTML = '';
+    // Update timeline data
     const linksForTimeline = allLinksWithMatchInfo && allLinksWithMatchInfo.length
       ? allLinksWithMatchInfo
       : links;
-    this._timeline = this.createTimeline(linksForTimeline);
+    this._timelineElement.innerHTML = '';
+    const timelineData = linksForTimeline.map(link => ({
+      date: new Date(link.date),
+      width: link.width || 1,
+      matched: link.matched ?? true
+    }));
+    this._timeline = this.createTimeline(timelineData);
     this._timelineElement.appendChild(this._timeline);
+
     return this;
   }
 
@@ -233,34 +214,23 @@ export class CosmographClient {
     const barData = nodes.map(node => ({
       name: node.name,
       size: node.size || 0,
-      matched: node.matched ?? true
     }));
-    console.log("nodes passed to createHistogram:", nodes);
-    console.log("barData passed to createHistogram:", barData);
-    return plot(
-      barY(barData, {
-        x: "name",
-        y: "size",
-        fill: "steelblue",
-        opacity: barData.map(d => d.matched ? 1 : 0.2)
+    return vg.plot(
+      vg.barY(barData, { 
+        x: 'name', 
+        y: 'size', 
+        fill: 'steelblue',
+        opacity: 1 // Set base opacity to 1
       }),
-      // highlight({
-      //   by: this._searchHighlightSelection,
-      //   // Optionally customize dimming:
-      //   // channels: { opacity: 0.3, fill: '#999' }
-      // }),
-      toggle({
-        as: this._histogramSelection,
-        channels: ["x"]
-      }),
-      width(1000),
-      height(200),
-      xScale("band"),
-      yScale("linear"),
-      padding(0.1)
+      vg.highlight({ by: this._searchSelection, opacity: 0.2 }),
+      vg.toggle({ as: this._histogramSelection, channels: ['x'] }),
+      vg.width(1000),
+      vg.height(200),
+      vg.xScale('band'),
+      vg.yScale('linear'),
+      vg.padding(0.1)
     );
   }
-
 
   createTimeline(links) {
     const barData = links.map(link => ({
@@ -268,31 +238,22 @@ export class CosmographClient {
       width: link.width || 1,
       matched: link.matched ?? true
     }));
-  
+    
     // Sort by date to display bars in chronological order
     barData.sort((a, b) => a.date - b.date);
   
-    return plot(
-      barY(barData, { 
-        x: "date", 
-        y: "width", 
-        fill: "steelblue", 
-        opacity: barData.map(d => d.matched ? 1 : 0.2) 
-      }),
-      // timeline selection TODO
-      toggle({
-        as: this._timelineSelection,
-        channels: ["x"]
-      }),
-      width(1000),
-      height(200),
-      xScale("band"),
-      yScale("linear"),
-      padding(0.1)
+    return vg.plot(
+      vg.barY(barData, { x: 'date', y: 'width', fill: 'steelblue', opacity: barData.map(d => d.matched ? 1 : 0.2) }),
+      vg.toggle({ as: this._timelineSelection, channels: ['x'] }),
+      vg.width(1000),
+      vg.height(200),
+      vg.xScale('band'),
+      vg.yScale('linear'),
+      vg.padding(0.1)
     );
   }
 
-  /** Configuration Methods */
+  // Configuration and other methods remain similar
   setConfig(config) {
     this._cosmograph.setConfig(config);
     return this;
@@ -302,7 +263,6 @@ export class CosmographClient {
     this._cosmograph.setZoomLevel(value, duration);
   }
 
-  /** Node Methods */
   selectNode(node, selectAdjacentNodes = false) {
     if (selectAdjacentNodes) {
       const adjacentNodes = this.getAdjacentNodes(node.id);
@@ -332,7 +292,6 @@ export class CosmographClient {
     return this._cosmograph.getNodePositions();
   }
 
-  /** Zooming Methods */
   fitView(duration = 250) {
     this._cosmograph.fitView(duration);
   }
@@ -341,32 +300,6 @@ export class CosmographClient {
     this._cosmograph.fitViewByNodeIds(ids, duration);
   }
 
-  zoomToNode(node) {
-    this._cosmograph.zoomToNode(node);
-  }
-
-  getZoomLevel() {
-    return this._cosmograph.getZoomLevel();
-  }
-
-  /** Timeline Control */
-  playTimelineAnimation() {
-    this._timeline.playAnimation();
-  }
-
-  pauseTimelineAnimation() {
-    this._timeline.pauseAnimation();
-  }
-
-  stopTimelineAnimation() {
-    this._timeline.stopAnimation();
-  }
-
-  setTimelineSelection(range) {
-    this._timeline.setSelection(range);
-  }
-
-  /** Simulation Methods */
   start(alpha = 1) {
     this._cosmograph.start(alpha);
   }
@@ -383,7 +316,6 @@ export class CosmographClient {
     return this._cosmograph.isSimulationRunning;
   }
 
-  /** Event Handlers */
   onClick(clickedNode, index, position, event) {
     console.log(`Clicked on node ${clickedNode?.id || 'empty space'}`);
   }
@@ -396,23 +328,19 @@ export class CosmographClient {
     console.log('Simulation ended');
   }
 
-  /** Query and Update Handling */
-  requestQuery(query) {
-    const q = query || this.query();
-    return this._coordinator.requestQuery(this, q).then((data) => {
-      this.setData(data.nodes, data.links);
-    });
-  }
+  // requestQuery(query) {
+  //   const q = query || this.query();
+  //   return this._coordinator.requestQuery(this, q).then((data) => {
+  //     this.setData(data.nodes, data.links);
+  //   });
+  // }
 
   requestUpdate() {
     this._requestUpdate();
   }
 
-  /** Destroy Graph */
   remove() {
     this._cosmograph.remove();
     console.log('Graph instance destroyed');
   }
 }
-
-

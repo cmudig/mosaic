@@ -1,15 +1,15 @@
 import { Selection, coordinator, wasmConnector } from '@uwdata/mosaic-core';
 import { loadCSV } from '@uwdata/mosaic-sql';
-import { CosmographClient } from './cosmo.js';
+import { CosmographClient } from '../../../packages/graph_component/cosmoClient.js';
 
 async function init() {
     const wasm = await wasmConnector({ log: false });
     coordinator().databaseConnector(wasm);
 
     await coordinator().exec(
-        loadCSV("matches", `${window.location}match.csv`)
+        loadCSV("football_matches", `${window.location}football_matches.csv`)
     );
-    const matches = await coordinator().query(`SELECT * FROM matches`).then(res => res.toArray());
+    // const matches = await coordinator().query(`SELECT * FROM matches`).then(res => res.toArray());
 
 
     const selection = Selection.intersect();
@@ -21,45 +21,29 @@ async function init() {
         },
         {
             // view: result.view,
-            table: "matches",
+            table: "football_matches",
             dataset: "table",
-            selection: selection,
+            filter: selection,
+            nodeConfig: {
+                color: '#8888ff',
+                size: 2
+            },
+            linkConfig: {
+                width: 3,
+                linkColor: (link) => {
+                    switch (link.result) {
+                        case 'win': return '#00ff00';
+                        case 'lose': return '#ff0000';
+                        case 'draw': return '#ffff00';
+                        default: return '#b3b3b3';
+                    }
+                }
+            }
         }
     );
 
-    function extractGraphData(matches) {
-        const nodeSet = new Set();
-        const links = matches.map(match => {
-            nodeSet.add(match.source);
-            nodeSet.add(match.target);
-            
-            return {
-                source: match.source,
-                target: match.target,
-                result: match.result,
-                date: match.date
-            };
-        });
-        // const nodes = Array.from(nodeSet).map(player => ({ id: player }));  
-        const nodeList = Array.from(nodeSet);
-        
-        // Helper to generate random color (you can make this more consistent if needed)
-        function getColor(index) {
-            const hue = (index * 137.508) % 360; // Golden angle for distribution
-            return `hsl(${hue}, 70%, 50%)`;
-        }
-
-        const nodes = nodeList.map((player, index) => ({
-            id: player,
-            color: getColor(index)
-        }));
-        return { nodes, links };
-    }
-    
-    const { nodes, links } = extractGraphData(matches);
-
-    // coordinator().connect(cosmographClient);
-    cosmographClient.setData(nodes, links);
+    coordinator().connect(cosmographClient);
+    // cosmographClient.setData(nodes, links);
 }
 
 init();

@@ -3,7 +3,14 @@
 <head>
   <title>Mosaic Example Gallery</title>
   <link href="./styles.css" rel="stylesheet">
+  <script type="module" src="../packages/graph_component/client.js"></script>
+  <script src="../packages/graph_component/dark_bright_mode.js" defer></script>
 </head>
+<!-- <head>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="../packages/graph_component/client.js"></script>
+  <script src="../packages/graph_component/dark_bright_mode.js" defer></script>
+</head> -->
 <body>
   <header>
     <span>
@@ -108,6 +115,14 @@
     </details>
   </header>
   <div id="view"></div>
+  <!-- New container for testing the interactive graph component -->
+  <div id="interactive-graph-container" style="margin-top: 2rem;">
+    <h2>Interactive Graph Component Test</h2>
+    <div id="graph" style="width: 1000px; height: 600px; border: 1px solid #ccc; margin-bottom: 1rem;"></div>
+    <div id="histogram" style="width: 1000px; height: 200px; border: 1px solid #ccc; margin-bottom: 1rem;"></div>
+    <div id="search" style="width: 1000px; height: 100px; border: 1px solid #ccc; margin-bottom: 1rem;"></div>
+    <div id="timeline" style="width: 1000px; height: 200px; border: 1px solid #ccc;"></div>
+  </div>
 <script type="module">
   import yaml from '../node_modules/yaml/browser/index.js';
   import { astToDOM, astToESM, clear, parseSpec, setDatabaseConnector, vg } from './setup.js';
@@ -217,6 +232,27 @@
     const url = URL.createObjectURL(blob);
     return (await import(/* @vite-ignore */ url)).default;
   }
+
+  // test for interactive graph component
+  import { CosmographClient } from '../packages/graph_component/cosmoClient.js';
+
+  function testInteractiveGraph() {
+    // Get the containers from the newly added section
+    const graphContainer = document.getElementById('graph');
+    const histogramContainer = document.getElementById('histogram');
+    const searchContainer = document.getElementById('search');
+    const timelineContainer = document.getElementById('timeline');
+
+    // Create a new CosmographClient instance
+    const client = new CosmographClient(graphContainer, histogramContainer, searchContainer, timelineContainer);
+
+    // Set the data and start the simulation
+    client.setData(nodes, links);
+    client.start();
+  }
+
+  // Run the interactive graph test
+  testInteractiveGraph();
 </script>
 </body>
 </html>

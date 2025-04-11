@@ -1,0 +1,49 @@
+import { Selection, coordinator, wasmConnector } from '@uwdata/mosaic-core';
+import { loadCSV } from '@uwdata/mosaic-sql';
+import { CosmographClient } from '../../../packages/graph_component/cosmoClient.js';
+
+async function init() {
+    const wasm = await wasmConnector({ log: false });
+    coordinator().databaseConnector(wasm);
+
+    await coordinator().exec(
+        loadCSV("football_matches", `${window.location}football_matches.csv`)
+    );
+    // const matches = await coordinator().query(`SELECT * FROM matches`).then(res => res.toArray());
+
+
+    const selection = Selection.intersect();
+    
+    const container = document.getElementById('cosmograph-container');
+    const cosmographClient = new CosmographClient(
+        { 
+            container
+        },
+        {
+            // view: result.view,
+            table: "football_matches",
+            dataset: "table",
+            filter: selection,
+            nodeConfig: {
+                color: '#8888ff',
+                size: 2
+            },
+            linkConfig: {
+                width: 3,
+                linkColor: (link) => {
+                    switch (link.result) {
+                        case 'win': return '#00ff00';
+                        case 'lose': return '#ff0000';
+                        case 'draw': return '#ffff00';
+                        default: return '#b3b3b3';
+                    }
+                }
+            }
+        }
+    );
+
+    coordinator().connect(cosmographClient);
+    // cosmographClient.setData(nodes, links);
+}
+
+init();

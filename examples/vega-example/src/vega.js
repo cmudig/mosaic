@@ -1,7 +1,7 @@
 import { MosaicClient } from '@uwdata/mosaic-core';
 import { Query, avg, dateMonth, isBetween, literal } from '@uwdata/mosaic-sql';
 
-/** @type {import('vega-lite').TopLevelSpec} */
+/** @type {import('vega-lite').TopLevel} */
 export const spec = {
   $schema: "https://vega.github.io/schema/vega-lite/v5.json",
   layer: [

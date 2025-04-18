@@ -1,0 +1,17 @@
+{
+  "name": "@mosaic/graph-component",
+  "version": "0.1.0",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@cosmograph/cosmos": "^2.0.0-beta.20",
+    "@uwdata/mosaic-core": "^0.12.2"
+  }
+}

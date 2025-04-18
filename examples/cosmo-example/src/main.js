@@ -13,7 +13,6 @@ async function init() {
 
 
     const selection = Selection.intersect();
-    
     const container = document.getElementById('cosmograph-container');
     const cosmographClient = new CosmographClient(
         { 
@@ -30,8 +29,8 @@ async function init() {
             },
             linkConfig: {
                 width: 3,
-                linkColor: (link) => {
-                    switch (link.result) {
+                linkColor: (link_color) => {
+                    switch (link_color) {
                         case 'win': return '#00ff00';
                         case 'lose': return '#ff0000';
                         case 'draw': return '#ffff00';

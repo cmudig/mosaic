@@ -4,20 +4,21 @@
     "version": "0.12.2",
     "type": "module",
     "scripts": {
-      "dev": "vite",
-      "build": "vite build",
-      "preview": "vite preview"
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
     },
     "devDependencies": {
-      "vite": "^6.0.11"
+        "vite": "^6.0.11"
     },
     "dependencies": {
-      "@uwdata/mosaic-core": "^0.12.2",
-      "@uwdata/mosaic-sql": "^0.12.2",
-      "@uwdata/vgplot": "^0.12.2",
-      "vega": "^5.31.0",
-      "vega-embed": "^6.29.0",
-      "vega-lite": "^5.23.0"
+        "@cosmograph/cosmos": "^2.0.0-beta.20",
+        "@interacta/css-labels": "^0.1.2",
+        "@uwdata/mosaic-core": "^0.12.2",
+        "@uwdata/mosaic-sql": "^0.12.2",
+        "@uwdata/vgplot": "^0.12.2",
+        "vega": "^5.31.0",
+        "vega-embed": "^6.29.0",
+        "vega-lite": "^5.23.0"
     }
-  }
-  
+}

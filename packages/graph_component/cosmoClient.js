@@ -1,6 +1,8 @@
 import { Query, dateMonth } from '@uwdata/mosaic-sql';
 import { MosaicClient } from '@uwdata/mosaic-core';
-import { Cosmograph } from '@cosmograph/cosmograph';
+// import { Cosmograph } from '@cosmograph/cosmograph';
+import { Graph } from '@cosmograph/cosmos'
+import { CosmosLabels } from './cosmoLabel.js';
 
 export class CosmographClient extends MosaicClient {
     constructor({ container }, opts) {
@@ -21,6 +23,12 @@ export class CosmographClient extends MosaicClient {
 
         super(filter);
         this.container = container;
+        // this._cosmosLabels = new CosmosLabels(container, pointIndexToLabel);
+        this._cosmosLabels = undefined;
+        console.log('container element:', this.container);
+        console.log('offsetWidth:', this.container.offsetWidth);
+        console.log('offsetHeight:', this.container.offsetHeight);
+        
         this.table = table;
         this.dataset = dataset;
         this.selection = filter;
@@ -28,18 +36,37 @@ export class CosmographClient extends MosaicClient {
         this.nodeConfig = nodeConfig;
         this.linkConfig = linkConfig;
 
-        this._cosmograph = new Cosmograph(this.container, {
-            nodeColor: (node) => node.color || '#b3b3b3',
-            nodeSize: (node) => node.size ?? 1,
-            linkWidth: link => link.width ?? 2,
-            linkColor: link => this.getLinkColor(link),
+
+        this._cosmograph = new Graph(this.container, {
+            spaceSize: 1000,
+            backgroundColor: '#2d313a',
+            linkWidth: 3,
+            linkColor: (link_color) => this.getLinkColor(link_color),
             curvedLinks: true,
-            curvedLinkSegments: 20,
+            linkArrows: true,
             renderHoveredNodeRing: true,
             hoveredNodeRingColor: 'red',
             focusedNodeRingColor: 'yellow',
             showDynamicLabels: true,
-            backgroundColor: '#222222'
+            
+            simulationFriction: 0.1, // keeps the graph inert
+            simulationGravity: 0, // disables gravity
+            // simulationRepulsion: 0.5, // increases repulsion between points
+            fitViewDelay: 1000, // wait 1 second before fitting the view
+            fitViewPadding: 10, // centers the graph width padding of ~30% of screen
+            disableRescalePositions: true, // rescale positions
+            enableDrag: true,
+            
+            fitViewOnInit: true,
+        
+            
+            // simulationLinkDistance: 1
+            // simulationLinkSpring: 0.3
+            // onSimulationTick: () => this._cosmosLabels?.update(this._cosmograph),
+            // onZoom: () => this._cosmosLabels?.update(this._cosmograph)
+            
+            
+            
         });
         
 
@@ -47,7 +74,7 @@ export class CosmographClient extends MosaicClient {
         this._allLinks = [];
 
         this._cosmograph.onClick = this.onClick.bind(this);
-        this._cosmograph.onZoom = this.onZoom.bind(this);
+        // this._cosmograph.zoom = this.onZoom.bind(this);
         this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
     }   
 
@@ -82,36 +109,109 @@ export class CosmographClient extends MosaicClient {
         const nodes = Array.from(namesSet).map(name => ({
             id: name
         }));
-    
-        const links = [];
-        for (let i = 0; i < numRows; i++) {
-            links.push({
-                source: sourceCol.at(i),
-                target: targetCol.at(i),
-                result: resultCol.at(i),
-                // date: dateCol.at(i),
-                // matchId: matchIdCol.at(i),
-                // width: 2 // default
-            });
+
+        // /* --------- 1️⃣ build / refresh the label map -------------------- */
+        // const pointIndexToLabel = new Map(nodes.map((n, i) => [i, n.id]));
+
+        // /* tell the graph which points have labels (so it tracks them) */
+        // this._cosmograph.setLabels(pointIndexToLabel);
+
+        // /* create label helper once, afterwards just update its map */
+        // if (!this._cosmosLabels) {
+        //     this._cosmosLabels = new CosmosLabels(this.container, pointIndexToLabel);
+        // } else {
+        //     this._cosmosLabels.pointIndexToLabel = pointIndexToLabel;   // keep it in sync
+        // }
+
+
+
+        const pointPositions = new Float32Array(nodes.length * 2);
+        const radius = 100;
+        for (let i = 0; i < nodes.length; i++) {
+        const angle = (2 * Math.PI * i) / nodes.length;
+            pointPositions[i * 2] = radius * Math.cos(angle);     
+            pointPositions[i * 2 + 1] = radius * Math.sin(angle); 
         }
-    
-        console.log("nodes: ", nodes);
-        console.log("links: ", links);
+
+        // const pointIndexToLabel = new Map();
+        // const nameToIndex = new Map();
+        // nodes.forEach((node, i) => {
+        //     nameToIndex.set(node.id, i);
+        //     pointIndexToLabel.set(i, node.id);
+        // });
+        // console.log("pointIndexToLabel: ", pointIndexToLabel);
+        // this._pointIndexToLabel = pointIndexToLabel;
+        // this._cosmograph.setNodeLabels(pointIndexToLabel);
+
+        const nameToIndex = new Map(nodes.map((node, i) => [node.id, i]));
+        console.log("nameToIndex: ", nameToIndex);
+
+        const linkArray = new Float32Array(numRows * 2);
+        for (let i = 0; i < numRows; i++) {
+            const source = sourceCol.at(i);
+            const target = targetCol.at(i);
+            const sourceIndex = nameToIndex.get(source);
+            const targetIndex = nameToIndex.get(target);
+            linkArray[i * 2] = sourceIndex;
+            linkArray[i * 2 + 1] = targetIndex;
+        }
+
+        const linkColorArray = new Float32Array(numRows * 4);
+        for (let i = 0; i < numRows; i++) {
+            const result = resultCol.at(i);
+            const color = this.getLinkColor({ result });
+            if (color === '#00ff00') {           // Green
+                linkColorArray[i * 4] = 0;       // R
+                linkColorArray[i * 4 + 1] = 255; // G
+                linkColorArray[i * 4 + 2] = 0;   // B
+                linkColorArray[i * 4 + 3] = 0.5; // A
+            }
+            if (color === '#ff0000') {           // Red
+                linkColorArray[i * 4] = 255;
+                linkColorArray[i * 4 + 1] = 0;
+                linkColorArray[i * 4 + 2] = 0;
+                linkColorArray[i * 4 + 3] = 0.5;
+            }
+            if (color === '#ffff00') {           // Yellow
+                linkColorArray[i * 4] = 255;
+                linkColorArray[i * 4 + 1] = 255;
+                linkColorArray[i * 4 + 2] = 0;
+                linkColorArray[i * 4 + 3] = 0.5;
+            }
+            if (color === '#b3b3b3') {           // Gray
+                linkColorArray[i * 4] = 179;
+                linkColorArray[i * 4 + 1] = 179;
+                linkColorArray[i * 4 + 2] = 179;
+                linkColorArray[i * 4 + 3] = 0.5;
+            }            
+        }
+
+
+        this._cosmograph.setPointPositions(pointPositions);
+        this._cosmograph.setLinks(linkArray);
+        // this._cosmograph.render();
+        this._cosmograph.setLinkColors(linkColorArray);
+        this._cosmograph.render();
+        this._cosmograph.fitView();
+        this._cosmograph.setZoomLevel(0.8);
+
     
         this._allNodes = nodes;
-        this._allLinks = links;
-        this.setData(nodes, links);
+        this._allLinks = linkArray;
+        // this.setData(nodes, linkArray);
         return this;
     }
     
 
-    getLinkColor(link) {
+    getLinkColor(link_color) {
+        // console.log("aaahahhhahhahah ", link_color);
         if (this.linkConfig.linkColor) {
-            return this.linkConfig.linkColor(link);
+            console.log("result: ", link_color);
+            return this.linkConfig.linkColor(link_color.result);
         }
-        // console.log("result: ", link.result);
+        
         console.log("linkhere: ", link);
-        switch (link.result) {
+        switch (link_color.result) {
             case 'win': return '#00ff00';
             case 'loss': return '#ff0000';
             case 'draw': return '#ffff00';
@@ -126,7 +226,8 @@ export class CosmographClient extends MosaicClient {
         this._allLinks = links;
         console.log("set data node: ", nodes);
         console.log("link: ", links);
-        this._cosmograph.setData(nodes, links);
+        this._cosmograph.setLinks(links);
+        this._cosmograph.render()
         // this._cosmograph.start();
     }
 

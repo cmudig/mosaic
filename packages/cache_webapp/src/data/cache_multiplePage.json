@@ -1,0 +1,415 @@
+[
+    {
+        "Query": "SELECT DISTINCT \"sport\" AS \"value\" FROM \"athletes\" ORDER BY \"sport\"",
+        "Timestamp": "2025-02-28T19:02:35.301Z",
+        "Latency": 11.5,
+        "Size": 67,
+        "Index": 0
+    },
+    {
+        "Query": "SELECT DISTINCT \"sex\" AS \"value\" FROM \"athletes\" ORDER BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:35.310Z",
+        "Latency": 7.8,
+        "Size": 63,
+        "Index": 1
+    },
+    {
+        "Query": "SELECT DISTINCT \"name\" AS \"list\" FROM \"athletes\"",
+        "Timestamp": "2025-02-28T19:02:35.318Z",
+        "Latency": 8.1,
+        "Size": 48,
+        "Index": 2
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:35.347Z",
+        "Latency": 1.5,
+        "Size": 60,
+        "Index": 3
+    },
+    {
+        "Query": "SELECT REGR_INTERCEPT(\"height\", \"weight\") AS \"intercept\", REGR_SLOPE(\"height\", \"weight\") AS \"slope\", REGR_COUNT(\"height\", \"weight\") AS \"n\", REGR_SYY(\"height\", \"weight\") AS \"ssy\", REGR_SXX(\"height\", \"weight\") AS \"ssx\", REGR_AVGX(\"height\", \"weight\") AS \"xm\", CAST(MIN(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x0\", CAST(MAX(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x1\", \"sex\" FROM (SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\") GROUP BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:35.357Z",
+        "Latency": 6.6,
+        "Size": 499,
+        "Index": 4
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\" WHERE FALSE",
+        "Timestamp": "2025-02-28T19:02:35.359Z",
+        "Latency": 0.7,
+        "Size": 72,
+        "Index": 5
+    },
+    {
+        "Query": "SELECT \"name\", \"nationality\", \"sex\", \"height\", \"weight\", \"sport\" FROM \"athletes\" LIMIT 100 OFFSET 0",
+        "Timestamp": "2025-02-28T19:02:35.409Z",
+        "Latency": 50.1,
+        "Size": 99,
+        "Index": 6
+    },
+    {
+        "Query": "SELECT MIN(\"batch\") AS \"min\", MAX(\"batch\") AS \"max\" FROM \"athletesBatched\"",
+        "Timestamp": "2025-02-28T19:02:38.161Z",
+        "Latency": 5.4,
+        "Size": 74,
+        "Index": 7
+    },
+    {
+        "Query": "DESCRIBE SELECT COUNT(*)::INTEGER AS \"column\" FROM \"athletesBatched\" AS \"source\" GROUP BY ALL",
+        "Timestamp": "2025-02-28T19:02:38.171Z",
+        "Latency": 0.6,
+        "Size": 93,
+        "Index": 8
+    },
+    {
+        "Query": "SELECT \"sport\", \"sex\", AVG(\"height\") AS \"__avg__\", COUNT(\"height\")::INTEGER AS \"__n__\", STDDEV(\"height\") AS \"__sd__\" FROM \"athletesBatched\" AS \"source\" WHERE (\"batch\" BETWEEN 0 AND 20) GROUP BY \"sport\", \"sex\"",
+        "Timestamp": "2025-02-28T19:02:38.177Z",
+        "Latency": 4.9,
+        "Size": 208,
+        "Index": 9
+    },
+    {
+        "Query": "SELECT COUNT(*)::INTEGER AS \"text\", \"sport\" FROM \"athletesBatched\" AS \"source\" GROUP BY \"sport\"",
+        "Timestamp": "2025-02-28T19:02:38.188Z",
+        "Latency": 0.7,
+        "Size": 95,
+        "Index": 10
+    },
+    {
+        "Query": "SELECT DISTINCT \"sport\" AS \"value\" FROM \"athletes\" ORDER BY \"sport\"",
+        "Timestamp": "2025-02-28T19:02:40.382Z",
+        "Latency": 2.5,
+        "Size": 67,
+        "Index": 11
+    },
+    {
+        "Query": "SELECT DISTINCT \"sex\" AS \"value\" FROM \"athletes\" ORDER BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:40.392Z",
+        "Latency": 9.5,
+        "Size": 63,
+        "Index": 12
+    },
+    {
+        "Query": "SELECT DISTINCT \"name\" AS \"list\" FROM \"athletes\"",
+        "Timestamp": "2025-02-28T19:02:40.401Z",
+        "Latency": 8.8,
+        "Size": 48,
+        "Index": 13
+    },
+    {
+        "Query": "DESCRIBE SELECT \"weight\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.419Z",
+        "Latency": 7.9,
+        "Size": 64,
+        "Index": 14
+    },
+    {
+        "Query": "DESCRIBE SELECT \"height\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.420Z",
+        "Latency": 0.9,
+        "Size": 64,
+        "Index": 15
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sex\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.420Z",
+        "Latency": 0.2,
+        "Size": 61,
+        "Index": 16
+    },
+    {
+        "Query": "DESCRIBE SELECT \"name\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.421Z",
+        "Latency": 0.4,
+        "Size": 62,
+        "Index": 17
+    },
+    {
+        "Query": "DESCRIBE SELECT \"nationality\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.421Z",
+        "Latency": 0.2,
+        "Size": 69,
+        "Index": 18
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sport\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.422Z",
+        "Latency": 0.2,
+        "Size": 63,
+        "Index": 19
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:40.429Z",
+        "Latency": 7.0,
+        "Size": 60,
+        "Index": 20
+    },
+    {
+        "Query": "SELECT REGR_INTERCEPT(\"height\", \"weight\") AS \"intercept\", REGR_SLOPE(\"height\", \"weight\") AS \"slope\", REGR_COUNT(\"height\", \"weight\") AS \"n\", REGR_SYY(\"height\", \"weight\") AS \"ssy\", REGR_SXX(\"height\", \"weight\") AS \"ssx\", REGR_AVGX(\"height\", \"weight\") AS \"xm\", CAST(MIN(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x0\", CAST(MAX(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x1\", \"sex\" FROM (SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\") GROUP BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:40.434Z",
+        "Latency": 2.2,
+        "Size": 499,
+        "Index": 21
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\" WHERE FALSE",
+        "Timestamp": "2025-02-28T19:02:40.434Z",
+        "Latency": 0.3,
+        "Size": 72,
+        "Index": 22
+    },
+    {
+        "Query": "SELECT \"name\", \"nationality\", \"sex\", \"height\", \"weight\", \"sport\" FROM \"athletes\" LIMIT 100 OFFSET 0",
+        "Timestamp": "2025-02-28T19:02:40.482Z",
+        "Latency": 45.1,
+        "Size": 99,
+        "Index": 23
+    },
+    {
+        "Query": "SELECT DISTINCT \"sport\" AS \"value\" FROM \"athletes\" ORDER BY \"sport\"",
+        "Timestamp": "2025-02-28T19:02:44.862Z",
+        "Latency": 1.9,
+        "Size": 67,
+        "Index": 24
+    },
+    {
+        "Query": "SELECT DISTINCT \"sex\" AS \"value\" FROM \"athletes\" ORDER BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:44.871Z",
+        "Latency": 8.5,
+        "Size": 63,
+        "Index": 25
+    },
+    {
+        "Query": "SELECT DISTINCT \"name\" AS \"list\" FROM \"athletes\"",
+        "Timestamp": "2025-02-28T19:02:44.880Z",
+        "Latency": 8.3,
+        "Size": 48,
+        "Index": 26
+    },
+    {
+        "Query": "DESCRIBE SELECT \"weight\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.899Z",
+        "Latency": 9.7,
+        "Size": 64,
+        "Index": 27
+    },
+    {
+        "Query": "DESCRIBE SELECT \"height\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.900Z",
+        "Latency": 0.6,
+        "Size": 64,
+        "Index": 28
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sex\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.901Z",
+        "Latency": 0.6,
+        "Size": 61,
+        "Index": 29
+    },
+    {
+        "Query": "DESCRIBE SELECT \"name\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.901Z",
+        "Latency": 0.4,
+        "Size": 62,
+        "Index": 30
+    },
+    {
+        "Query": "DESCRIBE SELECT \"nationality\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.902Z",
+        "Latency": 0.6,
+        "Size": 69,
+        "Index": 31
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sport\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.903Z",
+        "Latency": 0.3,
+        "Size": 63,
+        "Index": 32
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:44.916Z",
+        "Latency": 3.9,
+        "Size": 60,
+        "Index": 33
+    },
+    {
+        "Query": "SELECT REGR_INTERCEPT(\"height\", \"weight\") AS \"intercept\", REGR_SLOPE(\"height\", \"weight\") AS \"slope\", REGR_COUNT(\"height\", \"weight\") AS \"n\", REGR_SYY(\"height\", \"weight\") AS \"ssy\", REGR_SXX(\"height\", \"weight\") AS \"ssx\", REGR_AVGX(\"height\", \"weight\") AS \"xm\", CAST(MIN(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x0\", CAST(MAX(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x1\", \"sex\" FROM (SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\") GROUP BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:44.921Z",
+        "Latency": 2.6,
+        "Size": 499,
+        "Index": 34
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\" WHERE FALSE",
+        "Timestamp": "2025-02-28T19:02:44.922Z",
+        "Latency": 0.4,
+        "Size": 72,
+        "Index": 35
+    },
+    {
+        "Query": "SELECT \"name\", \"nationality\", \"sex\", \"height\", \"weight\", \"sport\" FROM \"athletes\" LIMIT 100 OFFSET 0",
+        "Timestamp": "2025-02-28T19:02:44.968Z",
+        "Latency": 45.2,
+        "Size": 99,
+        "Index": 36
+    },
+    {
+        "Query": "SELECT MIN(\"date\") AS \"min\", MAX(\"date\") AS \"max\" FROM \"travelers\"",
+        "Timestamp": "2025-02-28T19:02:47.122Z",
+        "Latency": 1.1,
+        "Size": 66,
+        "Index": 37
+    },
+    {
+        "Query": "SELECT MIN(\"date\") AS \"date\", ARG_MIN(\"previous\", \"date\") AS \"previous\" FROM (SELECT \"date\", \"previous\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER UNION SELECT MAX(\"date\") AS \"date\", ARG_MAX(\"previous\", \"date\") AS \"previous\" FROM (SELECT \"date\", \"previous\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER UNION SELECT ARG_MIN(\"date\", \"previous\") AS \"date\", MIN(\"previous\") AS \"previous\" FROM (SELECT \"date\", \"previous\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER UNION SELECT ARG_MAX(\"date\", \"previous\") AS \"date\", MAX(\"previous\") AS \"previous\" FROM (SELECT \"date\", \"previous\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER ORDER BY \"date\"",
+        "Timestamp": "2025-02-28T19:02:47.143Z",
+        "Latency": 6.0,
+        "Size": 977,
+        "Index": 38
+    },
+    {
+        "Query": "SELECT MIN(\"date\") AS \"date\", ARG_MIN(\"current\", \"date\") AS \"current\" FROM (SELECT \"date\", \"current\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER UNION SELECT MAX(\"date\") AS \"date\", ARG_MAX(\"current\", \"date\") AS \"current\" FROM (SELECT \"date\", \"current\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER UNION SELECT ARG_MIN(\"date\", \"current\") AS \"date\", MIN(\"current\") AS \"current\" FROM (SELECT \"date\", \"current\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER UNION SELECT ARG_MAX(\"date\", \"current\") AS \"date\", MAX(\"current\") AS \"current\" FROM (SELECT \"date\", \"current\" FROM \"travelers\" AS \"source\") GROUP BY FLOOR((epoch_ms(\"date\")::DOUBLE - 1583020800000) * 2.2412671869193607e-8::DOUBLE)::INTEGER ORDER BY \"date\"",
+        "Timestamp": "2025-02-28T19:02:47.146Z",
+        "Latency": 2.9,
+        "Size": 963,
+        "Index": 39
+    },
+    {
+        "Query": "SELECT DISTINCT \"sport\" AS \"value\" FROM \"athletes\" ORDER BY \"sport\"",
+        "Timestamp": "2025-02-28T19:02:48.689Z",
+        "Latency": 1.6,
+        "Size": 67,
+        "Index": 40
+    },
+    {
+        "Query": "SELECT DISTINCT \"sex\" AS \"value\" FROM \"athletes\" ORDER BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:48.691Z",
+        "Latency": 1.0,
+        "Size": 63,
+        "Index": 41
+    },
+    {
+        "Query": "SELECT DISTINCT \"name\" AS \"list\" FROM \"athletes\"",
+        "Timestamp": "2025-02-28T19:02:48.694Z",
+        "Latency": 2.9,
+        "Size": 48,
+        "Index": 42
+    },
+    {
+        "Query": "DESCRIBE SELECT \"weight\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.710Z",
+        "Latency": 1.0,
+        "Size": 64,
+        "Index": 43
+    },
+    {
+        "Query": "DESCRIBE SELECT \"height\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.711Z",
+        "Latency": 0.5,
+        "Size": 64,
+        "Index": 44
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sex\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.711Z",
+        "Latency": 0.4,
+        "Size": 61,
+        "Index": 45
+    },
+    {
+        "Query": "DESCRIBE SELECT \"name\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.712Z",
+        "Latency": 0.3,
+        "Size": 62,
+        "Index": 46
+    },
+    {
+        "Query": "DESCRIBE SELECT \"nationality\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.713Z",
+        "Latency": 0.4,
+        "Size": 69,
+        "Index": 47
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sport\" AS \"column\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.713Z",
+        "Latency": 0.3,
+        "Size": 63,
+        "Index": 48
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:48.722Z",
+        "Latency": 1.1,
+        "Size": 60,
+        "Index": 49
+    },
+    {
+        "Query": "SELECT REGR_INTERCEPT(\"height\", \"weight\") AS \"intercept\", REGR_SLOPE(\"height\", \"weight\") AS \"slope\", REGR_COUNT(\"height\", \"weight\") AS \"n\", REGR_SYY(\"height\", \"weight\") AS \"ssy\", REGR_SXX(\"height\", \"weight\") AS \"ssx\", REGR_AVGX(\"height\", \"weight\") AS \"xm\", CAST(MIN(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x0\", CAST(MAX(\"weight\") FILTER (WHERE (\"height\" IS NOT NULL)) AS DOUBLE) AS \"x1\", \"sex\" FROM (SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\") GROUP BY \"sex\"",
+        "Timestamp": "2025-02-28T19:02:48.728Z",
+        "Latency": 2.2,
+        "Size": 499,
+        "Index": 50
+    },
+    {
+        "Query": "SELECT \"weight\", \"height\", \"sex\" FROM \"athletes\" AS \"source\" WHERE FALSE",
+        "Timestamp": "2025-02-28T19:02:48.728Z",
+        "Latency": 0.3,
+        "Size": 72,
+        "Index": 51
+    },
+    {
+        "Query": "SELECT \"name\", \"nationality\", \"sex\", \"height\", \"weight\", \"sport\" FROM \"athletes\" LIMIT 100 OFFSET 0",
+        "Timestamp": "2025-02-28T19:02:48.729Z",
+        "Latency": 0.6,
+        "Size": 99,
+        "Index": 52
+    },
+    {
+        "Query": "SELECT MIN(\"batch\") AS \"min\", MAX(\"batch\") AS \"max\" FROM \"athletesBatched\"",
+        "Timestamp": "2025-02-28T19:02:50.505Z",
+        "Latency": 0.9,
+        "Size": 74,
+        "Index": 53
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sport\" AS \"column\" FROM \"athletesBatched\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:50.506Z",
+        "Latency": 0.5,
+        "Size": 70,
+        "Index": 54
+    },
+    {
+        "Query": "DESCRIBE SELECT \"sex\" AS \"column\" FROM \"athletesBatched\" AS \"source\"",
+        "Timestamp": "2025-02-28T19:02:50.507Z",
+        "Latency": 0.5,
+        "Size": 68,
+        "Index": 55
+    },
+    {
+        "Query": "DESCRIBE SELECT COUNT(*)::INTEGER AS \"column\" FROM \"athletesBatched\" AS \"source\" GROUP BY ALL",
+        "Timestamp": "2025-02-28T19:02:50.508Z",
+        "Latency": 0.5,
+        "Size": 93,
+        "Index": 56
+    },
+    {
+        "Query": "SELECT \"sport\", \"sex\", AVG(\"height\") AS \"__avg__\", COUNT(\"height\")::INTEGER AS \"__n__\", STDDEV(\"height\") AS \"__sd__\" FROM \"athletesBatched\" AS \"source\" WHERE (\"batch\" BETWEEN 0 AND 20) GROUP BY \"sport\", \"sex\"",
+        "Timestamp": "2025-02-28T19:02:50.522Z",
+        "Latency": 2.1,
+        "Size": 208,
+        "Index": 57
+    },
+    {
+        "Query": "SELECT COUNT(*)::INTEGER AS \"text\", \"sport\" FROM \"athletesBatched\" AS \"source\" GROUP BY \"sport\"",
+        "Timestamp": "2025-02-28T19:02:50.524Z",
+        "Latency": 0.8,
+        "Size": 95,
+        "Index": 58
+    }
+]

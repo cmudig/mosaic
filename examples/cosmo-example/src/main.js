@@ -13,10 +13,13 @@ async function init() {
 
 
     const selection = Selection.intersect();
-    const container = document.getElementById('cosmograph-container');
+    // const container = document.getElementById('cosmograph-container');
+    const graphDiv  = document.getElementById('graph');
+    const labelsDiv = document.getElementById('labels');
     const cosmographClient = new CosmographClient(
         { 
-            container
+            graphContainer: graphDiv, 
+            labelsContainer: labelsDiv
         },
         {
             // view: result.view,

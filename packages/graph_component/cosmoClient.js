@@ -5,7 +5,7 @@ import { Graph } from '@cosmograph/cosmos'
 import { CosmosLabels } from './cosmoLabel.js';
 
 export class CosmographClient extends MosaicClient {
-    constructor({ container }, opts) {
+    constructor({ graphContainer, labelsContainer }, opts) {
         const {
             table,
             dataset,
@@ -22,12 +22,14 @@ export class CosmographClient extends MosaicClient {
         } = opts; 
 
         super(filter);
-        this.container = container;
+        // this.container = container;
+        this.graphContainer  = graphContainer;
+        this.labelsContainer = labelsContainer;
         // this._cosmosLabels = new CosmosLabels(container, pointIndexToLabel);
         this._cosmosLabels = undefined;
-        console.log('container element:', this.container);
-        console.log('offsetWidth:', this.container.offsetWidth);
-        console.log('offsetHeight:', this.container.offsetHeight);
+        // console.log('container element:', this.container);
+        // console.log('offsetWidth:', this.container.offsetWidth);
+        // console.log('offsetHeight:', this.container.offsetHeight);
         
         this.table = table;
         this.dataset = dataset;
@@ -37,7 +39,7 @@ export class CosmographClient extends MosaicClient {
         this.linkConfig = linkConfig;
 
 
-        this._cosmograph = new Graph(this.container, {
+        this._cosmograph = new Graph(this.graphContainer, {
             spaceSize: 1000,
             backgroundColor: '#2d313a',
             linkWidth: 3,
@@ -47,24 +49,24 @@ export class CosmographClient extends MosaicClient {
             renderHoveredNodeRing: true,
             hoveredNodeRingColor: 'red',
             focusedNodeRingColor: 'yellow',
-            showDynamicLabels: true,
+            showNodeLabels: true,
             
             simulationFriction: 0.1, // keeps the graph inert
             simulationGravity: 0, // disables gravity
             // simulationRepulsion: 0.5, // increases repulsion between points
             fitViewDelay: 1000, // wait 1 second before fitting the view
             fitViewPadding: 10, // centers the graph width padding of ~30% of screen
-            disableRescalePositions: true, // rescale positions
+            disableRescalePositions: false, // rescale positions
             enableDrag: true,
             
             fitViewOnInit: true,
         
-            
+            showDynamicLabels: true,
             // simulationLinkDistance: 1
             // simulationLinkSpring: 0.3
-            // onSimulationTick: () => this._cosmosLabels?.update(this._cosmograph),
-            // onZoom: () => this._cosmosLabels?.update(this._cosmograph)
-            
+            onSimulationTick: () => this._cosmosLabels?.update(this._cosmograph),
+            onZoom: () => this._cosmosLabels?.update(this._cosmograph)
+
             
             
         });
@@ -73,9 +75,9 @@ export class CosmographClient extends MosaicClient {
         this._allNodes = [];
         this._allLinks = [];
 
-        this._cosmograph.onClick = this.onClick.bind(this);
+        // this._cosmograph.onClick = this.onClick.bind(this);
         // this._cosmograph.zoom = this.onZoom.bind(this);
-        this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
+        // this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
     }   
 
     query() {
@@ -106,23 +108,13 @@ export class CosmographClient extends MosaicClient {
             namesSet.add(targetCol.at(i));
         }
     
-        const nodes = Array.from(namesSet).map(name => ({
-            id: name
-        }));
+        // const nodes = Array.from(namesSet).map(name => ({
+        //     id: name
+        // }));
+        const nodes = Array.from(namesSet).map(id => ({ id }));
 
-        // /* --------- 1️⃣ build / refresh the label map -------------------- */
-        // const pointIndexToLabel = new Map(nodes.map((n, i) => [i, n.id]));
-
-        // /* tell the graph which points have labels (so it tracks them) */
-        // this._cosmograph.setLabels(pointIndexToLabel);
-
-        // /* create label helper once, afterwards just update its map */
-        // if (!this._cosmosLabels) {
-        //     this._cosmosLabels = new CosmosLabels(this.container, pointIndexToLabel);
-        // } else {
-        //     this._cosmosLabels.pointIndexToLabel = pointIndexToLabel;   // keep it in sync
-        // }
-
+        const pointIndexToLabel = new Map(nodes.map((n,i) => [i, n.id]));
+        console.log("pointIndexToLabel: ", Array.from(pointIndexToLabel.keys()));
 
 
         const pointPositions = new Float32Array(nodes.length * 2);
@@ -132,16 +124,8 @@ export class CosmographClient extends MosaicClient {
             pointPositions[i * 2] = radius * Math.cos(angle);     
             pointPositions[i * 2 + 1] = radius * Math.sin(angle); 
         }
-
-        // const pointIndexToLabel = new Map();
-        // const nameToIndex = new Map();
-        // nodes.forEach((node, i) => {
-        //     nameToIndex.set(node.id, i);
-        //     pointIndexToLabel.set(i, node.id);
-        // });
-        // console.log("pointIndexToLabel: ", pointIndexToLabel);
-        // this._pointIndexToLabel = pointIndexToLabel;
-        // this._cosmograph.setNodeLabels(pointIndexToLabel);
+        console.log("pointPositions: ", pointPositions);
+        this._pointPositions = pointPositions;
 
         const nameToIndex = new Map(nodes.map((node, i) => [node.id, i]));
         console.log("nameToIndex: ", nameToIndex);
@@ -192,9 +176,23 @@ export class CosmographClient extends MosaicClient {
         // this._cosmograph.render();
         this._cosmograph.setLinkColors(linkColorArray);
         this._cosmograph.render();
-        this._cosmograph.fitView();
-        this._cosmograph.setZoomLevel(0.8);
+        
+        this._cosmograph.trackPointPositionsByIndices(
+            Array.from(pointIndexToLabel.keys()) 
+        );
+        this._cosmosLabels?.update(this._cosmograph);
+        console.log('tracked size:', this._cosmograph.getTrackedPointPositionsMap().size);
 
+        if (!this._cosmosLabels) {
+            this._cosmosLabels = new CosmosLabels(this.labelsContainer, pointIndexToLabel, this._pointPositions);
+        } else {
+            this._cosmosLabels.setLabels(pointIndexToLabel);
+        }
+
+        this._cosmosLabels.update(this._cosmograph);
+        this._cosmograph.fitView();
+        // this._cosmograph.setZoomLevel(0.8);
+        // console.log('tracked', this._cosmograph.getTrackedPointPositionsMap().size, 'labels', this._cosmosLabels.labels.length);
     
         this._allNodes = nodes;
         this._allLinks = linkArray;
@@ -206,7 +204,7 @@ export class CosmographClient extends MosaicClient {
     getLinkColor(link_color) {
         // console.log("aaahahhhahhahah ", link_color);
         if (this.linkConfig.linkColor) {
-            console.log("result: ", link_color);
+            // console.log("result: ", link_color);
             return this.linkConfig.linkColor(link_color.result);
         }
         

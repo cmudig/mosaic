@@ -34,7 +34,7 @@ export class CosmosLabels {
                 id:    String(pointIndex),
                 text:  this.pointIndexToLabel.get(pointIndex) || '',
                 x:     screenX,
-                y:     screenY - (radiusPx + 2),
+                y:     screenY - (radiusPx + 1),
                 opacity: 1,
             });
         });

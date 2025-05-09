@@ -34,50 +34,6 @@ export class CosmographClient extends MosaicClient {
         this.columns = columns;
         this.nodeConfig = nodeConfig;
         this.linkConfig = linkConfig;
-        // const pointIndexToLabel = new Map();
-        // for (let i = 0; i < 100; i++) {
-        //     pointIndexToLabel.set(i, `Node ${i}`);
-        // }
-        // this._cosmosLabels = new CosmosLabels(labelsContainer, pointIndexToLabel);
-        
-        console.log('this._pointPositions', this._pointPositions);
-
-
-        this._cosmograph = new Graph(this.graphContainer, {
-            spaceSize: 4096,
-            backgroundColor: '#2d313a',
-            linkWidth: 3,
-            linkColor: (link_color) => this.getLinkColor(link_color),
-            curvedLinks: true,
-            linkArrows: true,
-            pointSize: 2,
-            
-            // simulationFriction: 0.1, 
-            // simulationGravity: 0, 
-            simulationGravity: 0.1,
-            simulationLinkDistance: 1,
-            simulationLinkSpring: 0.3,
-            simulationRepulsion: 0.4,
-            
-            fitViewPadding: 0.2,
-            enableDrag: true,
-        
-
-            fitViewDelay: 0,
-            fitViewOnInit: false,
-            enableSimulationDuringZoom: true,
-
-
-            onSimulationTick: () => this._cosmosLabels?.update(this._cosmograph),
-            onZoom: () => {
-                console.log("zooming");
-                this._cosmosLabels?.update(this._cosmograph)
-            }
-        });
-        
-        // this._cosmograph.onClick = this.onClick.bind(this);
-        // this._cosmograph.zoom = this.onZoom.bind(this);
-        // this._cosmograph.onSimulationEnd = this.onSimulationEnd.bind(this);
     }   
 
     query() {
@@ -174,6 +130,38 @@ export class CosmographClient extends MosaicClient {
                 linkColorArray[i * 4 + 3] = 0.5;
             }            
         }
+
+        this._cosmograph = new Graph(this.graphContainer, {
+            spaceSize: 4096,
+            backgroundColor: '#2d313a',
+            linkWidth: 3,
+            linkColor: (link_color) => this.getLinkColor(link_color),
+            curvedLinks: true,
+            linkArrows: true,
+            pointSize: 1,
+            
+            // simulationFriction: 0.1, 
+            // simulationGravity: 0, 
+            simulationGravity: 0.1,
+            simulationLinkDistance: 1,
+            simulationLinkSpring: 0.3,
+            simulationRepulsion: 0.4,
+            
+            fitViewPadding: 0.2,
+            enableDrag: true,
+        
+
+            fitViewDelay: 0,
+            fitViewOnInit: false,
+            enableSimulationDuringZoom: true,
+
+
+            onSimulationTick: () => this._cosmosLabels?.update(this._cosmograph),
+            onZoom: () => {
+                console.log("zooming");
+                this._cosmosLabels?.update(this._cosmograph)
+            }
+        });
 
         if (!this._cosmosLabels) {
             console.log("generating new labels");

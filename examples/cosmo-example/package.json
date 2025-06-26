@@ -12,7 +12,7 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
-        "@cosmograph/cosmos": "^2.0.0-beta.20",
+        "@cosmos.gl/graph": "^2.3.0",
         "@interacta/css-labels": "^0.1.2",
         "@uwdata/mosaic-core": "^0.12.2",
         "@uwdata/mosaic-sql": "^0.12.2",

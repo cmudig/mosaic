@@ -27,8 +27,8 @@ async function init() {
             dataset: "table",
             filter: selection,
             nodeConfig: {
-                color: '#8888ff',
-                size: 2
+                color: '#ffffff', 
+                size: 5  
             },
             linkConfig: {
                 width: 3,
@@ -45,7 +45,8 @@ async function init() {
     );
 
     coordinator().connect(cosmographClient);
-    // cosmographClient.setData(nodes, links);
+    //setTimeout(() => cosmographClient.start(), 1000)
+    //cosmographClient.start();
 }
 
 init();

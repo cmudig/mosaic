@@ -1,26 +1,40 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: sans-serif;
+}
+
+h2 {
+    position: relative;
+    z-index: 2;
+}
+
 #app {
     position: relative;
-    width: 1000px;
-    height: 600px;
-    border: 1px solid #ccc;
+    width: 100%;
+    height: calc(100vh - 100px); /* Adjust height accounting for header */
+    background-color: #2d313a; /* charade gray, first color shown */
+    margin-top: 20px;
     overflow: hidden;
 }
 
 #graph {
-    position: relative;
-    top: 0; left: 0;
+    position: absolute;
     width: 100%;
     height: 100%;
+    z-index: 1;
+    top: 0;
+    left: 0;
 }
-
 
 #labels {
     position: absolute;
-    top: 0; left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1;
     pointer-events: none;
-    z-index: 10;
+    top: 0;
+    left: 0;
 }
 
 * {

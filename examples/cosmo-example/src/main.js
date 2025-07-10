@@ -6,14 +6,12 @@ async function init() {
     const wasm = await wasmConnector({ log: false });
     coordinator().databaseConnector(wasm);
 
+
     await coordinator().exec(
         loadCSV("football_matches", `${window.location}football_matches.csv`)
     );
-    // const matches = await coordinator().query(`SELECT * FROM matches`).then(res => res.toArray());
-
 
     const selection = Selection.intersect();
-    // const container = document.getElementById('cosmograph-container');
     const graphDiv  = document.getElementById('graph');
     const labelsDiv = document.getElementById('labels');
     const cosmographClient = new CosmographClient(
@@ -22,7 +20,6 @@ async function init() {
             labelsContainer: labelsDiv
         },
         {
-            // view: result.view,
             table: "football_matches",
             dataset: "table",
             filter: selection,
@@ -45,8 +42,20 @@ async function init() {
     );
 
     coordinator().connect(cosmographClient);
-    //setTimeout(() => cosmographClient.start(), 1000)
-    //cosmographClient.start();
+
+
+    document.getElementById('start-link').onclick = (e) => {
+        e.preventDefault();
+        cosmographClient.start();
+    };
+    document.getElementById('pause-link').onclick = (e) => {
+        e.preventDefault();
+        cosmographClient.pause();
+    };
+    document.getElementById('fit-link').onclick = (e) => {
+        e.preventDefault();
+        cosmographClient._graph.fitView();
+    };
 }
 
 init();

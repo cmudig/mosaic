@@ -9,8 +9,14 @@
 </head>
 <body>
     <h2>Mosaic Cosmo Example</h2>
+    <div id="controls" style="margin-bottom: 10px; font-size: 1rem;">
+      <a href="#" id="start-link">Start</a> |
+      <a href="#" id="pause-link">Pause</a> |
+      <a href="#" id="fit-link">Fit View</a> 
+    </div>
     <div id="app">
         <div id="graph"></div>
+        <div id="cosmo-tooltip" style="position: absolute; display: none; background: #222; color: #fff; padding: 4px 8px; border-radius: 4px; pointer-events: none; z-index: 1000; font-size: 0.9em;"></div>
         <div id="labels"></div>
     </div>
     <script type="module" src="src/main.js"></script>

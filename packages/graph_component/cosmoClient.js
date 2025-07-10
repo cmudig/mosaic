@@ -29,6 +29,14 @@ export class CosmographClient extends MosaicClient {
         this.nodeConfig = nodeConfig;
         this.linkConfig = linkConfig;
 
+        this._mouse = { x: 0, y: 0 };
+        this.graphContainer.addEventListener('mousemove', (e) => {
+            this._mouse.x = e.clientX;
+            this._mouse.y = e.clientY;
+        });
+
+
+
         // (1) Build the helpers once
         this.pointIndexToLabel = new Map();
         console.log('pointIndexToLabel: ', this.pointIndexToLabel);
@@ -44,7 +52,7 @@ export class CosmographClient extends MosaicClient {
             linkColor: (link_color) => this.getLinkColor(link_color),
             curvedLinks: true,
             linkArrows: true,
-            pointSize: 1,
+            pointSize: 10,
             simulationGravity: 0.1,
             simulationLinkDistance: 30, 
             simulationLinkSpring: 0.3,
@@ -55,18 +63,57 @@ export class CosmographClient extends MosaicClient {
             fitViewDelay: 1000,
             enableSimulationDuringZoom: true,
             onSimulationTick: () => {
-                console.log('Simulation tick');
+                //console.log('Simulation tick');
                 this._labels.update(this._graph);
             },
   
             onZoom: () => {
-                console.log('Zoom event triggered');
+                //console.log('Zoom event triggered');
                 if (this._graph && this._labels) {
-                    console.log('onZoom valid, updating labels');
+                    //console.log('onZoom valid, updating labels');
                     this._labels.update(this._graph);
                 }
                 
-            }
+            },
+            onClick: (index) => {
+                if (index !== undefined) {
+                    // Zoom to the clicked point and select it
+                    console.log('Point clicked, index: ', index);
+                    console.log('Point label: ', this.pointIndexToLabel.get(index));
+                    this._graph.zoomToPointByIndex(index);
+                    this._graph.fitViewByPointIndices([index]);
+                    this._graph.pause();
+                } else {
+                    // Optionally, unselect points if clicked on empty space
+                    console.log('Clicked on empty space, unselecting points');
+                    this._graph.unselectPoints();
+                    this._graph.fitView();
+                    this._graph.start();
+                }
+            },
+
+            // onmouseover
+
+            onPointMouseOver: (index, event) => {
+                const label = this.pointIndexToLabel.get(index);
+                const [posX, posY] = this._graph.getTrackedPointPositionsMap().get(index) || [0, 0];
+                const [graphX, graphY] = this._graph.spaceToScreenPosition([posX, posY]);
+                //console.log(posX, posY);
+                //console.log(graphX, graphY);
+                if (label) {
+                    const tooltip = document.getElementById('cosmo-tooltip');
+                    tooltip.textContent = label;
+                    tooltip.style.display = 'block';
+                    // Position tooltip near mouse
+                    tooltip.style.left = (graphX || 0) + 10 + 'px';
+                    tooltip.style.top = (graphY || 0) + 10 + 'px';
+
+                }
+            },
+            onPointMouseOut: () => {
+                const tooltip = document.getElementById('cosmo-tooltip');
+                tooltip.style.display = 'none';
+            },
         });
 
         
@@ -98,10 +145,10 @@ export class CosmographClient extends MosaicClient {
         const nodes = Array.from(namesSet).map(id => ({ id }));
 
         // (2) Mutate the shared Map instead of creating new ones
-        console.log("clearing pointIndexToLabel");
+        //console.log("clearing pointIndexToLabel");
         this.pointIndexToLabel.clear();
         nodes.forEach((n, i) => this.pointIndexToLabel.set(i, n.id));
-        console.log("pointIndexToLabel after clearing and setting: ", this.pointIndexToLabel);
+        //console.log("pointIndexToLabel after clearing and setting: ", this.pointIndexToLabel);
         // Point positions
         const pointPositions = new Float32Array(nodes.length * 2);
         for (let i = 0; i < nodes.length; i++) {
@@ -113,6 +160,7 @@ export class CosmographClient extends MosaicClient {
 
         // Name to index
         const nameToIndex = new Map(nodes.map((node, i) => [node.id, i]));
+        //console.log("nameToIndex: ", nameToIndex);
 
         // Links
         const linkArray = new Float32Array(numRows * 2);

@@ -38,7 +38,7 @@ Plots are rendered to SVG output by marshalling a specification and passing it t
 
 ::: code-group
 ``` js [JavaScript]
-import { plot, line, from, width, height } from "@uwdata/vgplot";
+import { plot, lineY, from, width, height } from "@uwdata/vgplot";
 plot(
   lineY(from("aapl"), { x: "Date", y: "Close" }),
   width(680),
@@ -53,6 +53,15 @@ plot:
   y: Close
 width: 680
 height: 200
+```
+``` Python [Python]
+import mosaic.vgplot as vg
+
+vg.plot(
+    vg.line_y(data=vg.from_("aapl"), x="Date", y="Close"),
+    vg.width(680),
+    vg.height(200)
+)
 ```
 :::
 

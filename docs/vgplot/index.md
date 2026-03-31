@@ -54,15 +54,6 @@ plot:
 width: 680
 height: 200
 ```
-``` Python [Python]
-import mosaic.vgplot as vg
-
-vg.plot(
-    vg.line_y(data=vg.from_("aapl"), x="Date", y="Close"),
-    vg.width(680),
-    vg.height(200)
-)
-```
 :::
 
 The stock chart above consists of three directives:

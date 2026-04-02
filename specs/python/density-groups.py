@@ -1,5 +1,5 @@
 import json
-import mosaic.vgplot as vg
+import vgplot as vg
 
 meta = vg.meta(title="Density Groups", description="Density plots of penguin bill depths, grouped by species. The normalize parameter supports different forms of comparison, controlling if an individual density estimate is scaled by total point mass or normalized by the sum or max of the point mass. The stack and offset parameters control stacking of density areas.\n")
 data = vg.data(
@@ -39,12 +39,14 @@ view = vg.vconcat(
         )
 )
 
-spec = vg.spec(meta=meta, data=data, params={
+params = {
     "bandwidth": 20,
     "normalize": "none",
     "stack": False,
     "offset": None
-}, view=view)
+}
+
+spec = vg.spec(meta=meta, data=data, params=params, view=view)
 
 if __name__ == "__main__":
     print(json.dumps(spec.to_dict(), sort_keys=True))

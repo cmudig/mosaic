@@ -6,10 +6,8 @@ from pathlib import Path
 
 import pytest
 
-<<<<<<< HEAD:packages/schema-wrapper/test/test_full_round_trip.py
-=======
 # This test lives in: .../packages/vgplot-python/test/test_full_round_trip.py
->>>>>>> upstream/pythonAPI_improvements:packages/vgplot-python/test/test_full_round_trip.py
+
 ROOT = Path(__file__).resolve().parents[3]
 SPEC_DIR = ROOT / "specs"
 JSON_DIR = SPEC_DIR / "json"

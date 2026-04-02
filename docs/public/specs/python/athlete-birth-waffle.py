@@ -1,5 +1,5 @@
 import json
-import mosaic.vgplot as vg
+import vgplot as vg
 
 meta = vg.meta(title="Athlete Birth Waffle", description="Waffle chart counting Olympic athletes based on which half-decade they were born. The inputs enable adjustment of waffle mark design options.\n", credit="Adapted from an [Observable Plot example](https://observablehq.com/@observablehq/plot-waffle-unit).")
 data = vg.data(
@@ -46,12 +46,14 @@ view = vg.vconcat(
         )
 )
 
-spec = vg.spec(meta=meta, data=data, params={
+params = {
     "unit": 10,
     "round": False,
     "gap": 1,
     "radius": 0
-}, view=view)
+}
+
+spec = vg.spec(meta=meta, data=data, params=params, view=view)
 
 if __name__ == "__main__":
     print(json.dumps(spec.to_dict(), sort_keys=True))

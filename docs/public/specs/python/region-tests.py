@@ -1,5 +1,5 @@
 import json
-import mosaic.vgplot as vg
+import vgplot as vg
 
 meta = {
     "title": "Region Interactor Tests",
@@ -100,7 +100,7 @@ view = vg.vconcat(
         )
 )
 
-spec = vg.spec(meta=meta, data=data, params={
+params = {
     "series": {
     "select": "single"
 },
@@ -110,7 +110,9 @@ spec = vg.spec(meta=meta, data=data, params={
     "counties": {
     "select": "single"
 }
-}, view=view)
+}
+
+spec = vg.spec(meta=meta, data=data, params=params, view=view)
 
 if __name__ == "__main__":
     print(json.dumps(spec.to_dict(), sort_keys=True))

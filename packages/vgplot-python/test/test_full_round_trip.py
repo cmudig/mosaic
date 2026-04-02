@@ -1,4 +1,3 @@
-import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -15,11 +14,19 @@ PYTHON_DIR = SPEC_DIR / "python-new"
 sys.path.insert(0, str(ROOT))
 
 
-def import_module_from_path(path: Path):
-    spec = importlib.util.spec_from_file_location(path.stem, str(path))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def run_spec_file_with_exec(path: Path) -> object:
+    namespace: dict[str, object] = {
+        "__name__": "__spec_exec__",
+        "__file__": str(path),
+        "__builtins__": __builtins__,
+    }
+    code = compile(path.read_text(encoding="utf-8"), str(path), "exec")
+    exec(code, namespace)
+
+    spec = namespace.get("spec")
+    if spec is None:
+        raise AssertionError(f"`{path.name}` must define a top-level `spec` variable")
+    return spec
 
 
 def spec_to_dict(spec_obj):
@@ -67,11 +74,7 @@ def test_round_trip(example_name):
     py_path = PYTHON_DIR / f"{example_name}.py"
     assert py_path.exists(), f"Missing Python example: {py_path}"
 
-    module = import_module_from_path(py_path)
-    assert hasattr(module, "spec"), (
-        f"`{py_path.name}` must define a top-level `spec` variable"
-    )
-    generated = spec_to_dict(module.spec)
+    generated = spec_to_dict(run_spec_file_with_exec(py_path))
 
     assert generated == original, (
         f"Round-trip JSON mismatch for '{example_name}'.\n"

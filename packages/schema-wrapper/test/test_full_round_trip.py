@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -32,7 +33,11 @@ def run_python_spec(spec_path: Path) -> dict:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(ROOT) + os.pathsep + env.get("PYTHONPATH", "")
 
-    stdout = run_subprocess(["python", str(RUNNER), str(spec_path)], cwd=ROOT, env=env)
+    stdout = run_subprocess(
+        [sys.executable, str(RUNNER), str(spec_path)],
+        cwd=ROOT,
+        env=env,
+    )
     return json.loads(stdout)
 
 

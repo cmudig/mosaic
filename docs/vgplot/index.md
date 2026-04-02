@@ -31,9 +31,9 @@ title: Mosaic vgplot
   </button>
 </div>
 
-<template v-if="language === 'js'">
-# vgplot: An Interactive Grammar of Graphics
+<h1>{{ language === 'js' ? 'Mosaic vgplot' : 'Mosaic vgplot (Python)' }}</h1>
 
+<template v-if="language === 'js'">
 A grammar of interactive graphics in which graphical marks are Mosaic clients.
 
 <Example spec="/specs/yaml/mark-types.yaml" />
@@ -200,8 +200,6 @@ To ensure spacing, the `vspace` and `hspace` helpers add padding between element
 </template>
 
 <template v-else>
-# vgplot in Python
-
 Mosaic vgplot is a grammar of interactive graphics: each mark is a Mosaic client that queries data through the coordinator. In Python, `import mosaic.vgplot as vg` gives you composable helpers for plots, attributes, marks, interactors, legends, and layout. Names use **snake_case**; Python keywords are escaped with a trailing underscore (`from_`, `as_`, `for_`).
 
 The interactive figure below is driven by the same [declarative specification](/spec/) used across Mosaic (YAML in the docs site). In notebooks you usually pass an equivalent structure as a dict—built with `vg.*` helpers, loaded from YAML/JSON, or produced by your own tooling—to [`MosaicWidget`](/jupyter/) as `spec`.

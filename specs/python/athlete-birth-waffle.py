@@ -1,29 +1,59 @@
-from mosaic import *
-from mosaic.spec import *
-from mosaic.generated_classes import *
-from typing import Dict, Any, Union
+import json
+import vgplot as vg
 
-
-athletes = DataSource(
-    type="parquet",
-    file="data/athletes.parquet",
-    where=""
+meta = vg.meta(title="Athlete Birth Waffle", description="Waffle chart counting Olympic athletes based on which half-decade they were born. The inputs enable adjustment of waffle mark design options.\n", credit="Adapted from an [Observable Plot example](https://observablehq.com/@observablehq/plot-waffle-unit).")
+data = vg.data(
+    athletes=vg.parquet("data/athletes.parquet")
 )
 
-spec = Plot(
-    plot=[
-        PlotMark(WaffleY(
-            mark="waffleY",
-            data=PlotFrom(from_="athletes"),
-            unit=$unit,
-            round=$round,
-            gap=$gap,
-            rx=$radius,
-            x=ChannelValueSpec(ChannelValue(sql='5 * floor(year("date_of_birth") / 5)')),
-            y=ChannelValueSpec(ChannelValue(count=""))
-        ))
-    ],
-    xLabel=None,
-    xTickSize=0,
-    xTickFormat="d"
+view = vg.vconcat(
+    vg.hconcat(
+            vg.input("menu", as_="$unit", options=[
+                1,
+                2,
+                5,
+                10,
+                25,
+                50,
+                100
+            ], label="Unit"),
+            vg.input("menu", as_="$round", options=[
+                True,
+                False
+            ], label="Round"),
+            vg.input("menu", as_="$gap", options=[
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+            ], label="Gap"),
+            vg.slider(as_="$radius", min=0, max=10, step=0.1, label="Radius")
+        ),
+    {
+        "vspace": 10
+    },
+    vg.plot(
+            vg.waffle_y(data=vg.from_("athletes"), unit="$unit", round="$round", gap="$gap", rx="$radius", x={
+                "sql": "5 * floor(year(\"date_of_birth\") / 5)"
+            }, y={
+                "count": ""
+            }),
+            vg.x_label(None),
+            vg.x_tick_size(0),
+            vg.x_tick_format("d")
+        )
 )
+
+params = {
+    "unit": 10,
+    "round": False,
+    "gap": 1,
+    "radius": 0
+}
+
+spec = vg.spec(meta=meta, data=data, params=params, view=view)
+
+if __name__ == "__main__":
+    print(json.dumps(spec.to_dict(), sort_keys=True))

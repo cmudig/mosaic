@@ -1,0 +1,43 @@
+[project]
+name = "vgplot"
+version = "0.1.0"
+description = "Schema wrapper classes for Mosaic"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pyyaml",
+    "narwhals"
+]
+
+[project.urls]
+homepage = "https://github.com/uwdata/mosaic"
+
+[project.scripts]
+generate-schema-wrapper = "schema_wrapper.generate_schema_wrapper:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "jupyterlab>=4.2.5",
+    "mypy>=1.11.1",
+    "pytest>=7.4.4",
+    "pytest-cov",
+    "ruff>=0.6.1",
+    "pandas",
+    "mosaic-widget"
+]
+
+[tool.uv.sources]
+"mosaic-widget" = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["api", "schema_wrapper"]
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+files = "src/**/*.py"
+strict = false
+ignore_missing_imports = true

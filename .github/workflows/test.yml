@@ -31,6 +31,10 @@ jobs:
 
       - run: npm run lint
       - run: npm run build
+      - name: Verify generated examples are committed
+        run: |
+          npm run docs:examples
+          git diff --exit-code -- specs/esm specs/json specs/ts specs/python docs/public/specs docs/examples
       - run: npm run test
 
   python:
@@ -76,6 +80,12 @@ jobs:
           uv build
           uv run --group test ty check
           uv run --group test pytest --cov-report=term-missing --color=yes --cov=mosaic_widget
+
+      - name: Build and test Schema Wrapper
+        run: |
+          cd packages/vgplot-python
+
+          uv run --group dev pytest test/ --cov=schema_wrapper --cov-report=term-missing
 
   rust:
     name: Test in Rust

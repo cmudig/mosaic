@@ -16,3 +16,22 @@ node_modules
 **/.coverage
 **/.venv
 **/tsconfig.tsbuildinfo
+transitionFolder
+
+# Virtual environment
+venv/
+.env/
+
+# Conda environment
+conda-env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Test cache
+.pytest_cache/
+.coverage
+
+# Python API Generated classes
+packages/vgplot-python/schema_wrapper/generated_classes.py

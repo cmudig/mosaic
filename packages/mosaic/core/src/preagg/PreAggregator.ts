@@ -355,6 +355,12 @@ function preaggregateInfo(
     subqueryPushdown(subq, cols);
   }
 
+  // push any having or orderby criteria to output queries
+  const having = query._having;
+  const order = query._orderby;
+  query._having = [];
+  query._orderby = [];
+
   // generate creation query and hash id
   const create = query;
   const id = (fnv_hash(create.toString()) >>> 0).toString(16);

@@ -59,14 +59,16 @@ export class DuckDB {
     return new DuckDBStatement(stmt);
   }
 
-  /**
-   * @param {string | { toString(): string }} sql
-   * @returns {Promise<this>}
-   */
-  async exec(sql) {
-    await this._init;
-    await this.con.run(String(sql));
-    return this;
+  exec(sql) {
+    return new Promise((resolve, reject) => {
+      this.con.exec(String(sql), (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(this);
+        }
+      });
+    });
   }
 
   /**

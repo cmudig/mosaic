@@ -14,10 +14,8 @@ extend-exclude = [
 ]
 
 
-[tool.setuptools.packages.find]
-where = ["packages/vgplot-python"]
-include = ["api*"]
-
+[tool.uv]
+package = true
 
 [tool.ruff.lint]
 pydocstyle = { convention = "numpy" }

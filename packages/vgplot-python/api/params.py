@@ -29,7 +29,7 @@ class ParamValue(_ParamBase):
         return self._value
 
     def __repr__(self) -> str:
-        return f"Param.value({self._value!r})"
+        return f"param.value({self._value!r})"
 
 
 class ParamArray(_ParamBase):
@@ -40,7 +40,7 @@ class ParamArray(_ParamBase):
         return [_resolve(v, param_names) for v in self._values]
 
     def __repr__(self) -> str:
-        return f"Param.array({self._values!r})"
+        return f"param.array({self._values!r})"
 
 
 class SelectionDef(_ParamBase):
@@ -55,22 +55,16 @@ class SelectionDef(_ParamBase):
 
     def __repr__(self) -> str:
         opts = ", ".join(f"{k}={v!r}" for k, v in self._opts.items())
-        return f"Selection.{self._select}({opts})"
+        return f"selection.{self._select}({opts})"
 
 
-class Param:
-    """Namespace for creating scalar and array params."""
-
-    @staticmethod
-    def value(v: Any = None) -> ParamValue:
-        return ParamValue(v)
-
-    @staticmethod
-    def array(values: list) -> ParamArray:
-        return ParamArray(values)
+def param(value: Any = None) -> "_ParamBase":
+    if isinstance(value, list):
+        return ParamArray(value)
+    return ParamValue(value)
 
 
-class Selection:
+class selection:
     """Namespace for creating selection params."""
 
     @staticmethod

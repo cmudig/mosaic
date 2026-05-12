@@ -1,22 +1,22 @@
 import vgplot as vg
 
-_meta = vg.meta(title="Contour Plot", description="Here `heatmap` and `contour` marks visualize the density of data points in a scatter plot of penguin measurments. Setting the `fill` color to `\"species\"` subdivides the data into three sets of densities.\n")
-_data = vg.data(
+meta = vg.meta(title="Contour Plot", description="Here `heatmap` and `contour` marks visualize the density of data points in a scatter plot of penguin measurments. Setting the `fill` color to `\"species\"` subdivides the data into three sets of densities.\n")
+data = vg.data(
     penguins=vg.parquet("data/penguins.parquet")
 )
 
-bandwidth = vg.Param.value(40)
-thresholds = vg.Param.value(10)
+bandwidth = vg.param(40)
+thresholds = vg.param(10)
 
-_view = vg.vconcat(
+view = vg.vconcat(
     vg.hconcat(
-        vg.slider(label="Bandwidth (σ)", as_=bandwidth, min=1, max=100),
-        vg.slider(label="Thresholds", as_=thresholds, min=2, max=20)
+        vg.slider(label="Bandwidth (σ)", bind=bandwidth, min=1, max=100),
+        vg.slider(label="Thresholds", bind=thresholds, min=2, max=20)
     ),
     vg.plot(
-        vg.heatmap(data=vg.from_("penguins"), x="bill_length", y="bill_depth", fill="species", bandwidth=bandwidth),
-        vg.contour(data=vg.from_("penguins"), x="bill_length", y="bill_depth", stroke="species", bandwidth=bandwidth, thresholds=thresholds),
-        vg.dot(data=vg.from_("penguins"), x="bill_length", y="bill_depth", fill="currentColor", r=1),
+        vg.heatmap(data="penguins", x="bill_length", y="bill_depth", fill="species", bandwidth=bandwidth),
+        vg.contour(data="penguins", x="bill_length", y="bill_depth", stroke="species", bandwidth=bandwidth, thresholds=thresholds),
+        vg.dot(data="penguins", x="bill_length", y="bill_depth", fill="currentColor", r=1),
         vg.x_axis("bottom"),
         vg.x_label_anchor("center"),
         vg.y_axis("right"),
@@ -27,4 +27,4 @@ _view = vg.vconcat(
     )
 )
 
-spec = vg.spec(_meta, _data, _view, params={"bandwidth": bandwidth, "thresholds": thresholds})
+spec = vg.spec(meta, data, view)

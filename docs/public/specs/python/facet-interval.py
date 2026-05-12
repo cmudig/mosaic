@@ -1,28 +1,19 @@
 import vgplot as vg
 
-_meta = vg.meta(title="Faceted Interval Selections", description="A faceted plot with 2D interval selections.", credit="Adapted from https://observablehq.com/@observablehq/plot-non-faceted-marks")
-_data = vg.data(
+meta = vg.meta(title="Faceted Interval Selections", description="A faceted plot with 2D interval selections.", credit="Adapted from https://observablehq.com/@observablehq/plot-non-faceted-marks")
+data = vg.data(
     penguins=vg.parquet("data/penguins.parquet")
 )
 
-sel = vg.Selection.intersect()
+sel = vg.selection.intersect()
 
-_view = vg.hconcat(
+view = vg.hconcat(
     vg.plot(
         vg.frame(),
-        vg.dot(data=vg.from_("penguins"), x="bill_length", y="bill_depth", fill="#aaa", r=1),
-        vg.dot(data=vg.from_("penguins"), x="bill_length", y="bill_depth", fill="species", fx="sex", fy="species"),
-        {
-            "select": "intervalXY",
-            "as": sel,
-            "brush": {
-                "stroke": "transparent"
-            }
-        },
-        {
-            "select": "highlight",
-            "by": sel
-        },
+        vg.dot(data="penguins", x="bill_length", y="bill_depth", fill="#aaa", r=1),
+        vg.dot(data="penguins", x="bill_length", y="bill_depth", fill="species", fx="sex", fy="species"),
+        vg.interval_xy(bind=sel, brush=vg.brush(stroke="transparent")),
+        vg.highlight(by=sel),
         vg.name("plot"),
         vg.grid(True),
         vg.margin_right(60),
@@ -35,4 +26,4 @@ _view = vg.hconcat(
     )
 )
 
-spec = vg.spec(_meta, _data, _view, params={"sel": sel})
+spec = vg.spec(meta, data, view)

@@ -169,6 +169,14 @@ def spec(
             for name, val in caller.f_locals.items()
             if isinstance(val, _ParamBase)
         } or None
+    _RESERVED = {"data", "meta", "view"}
+    conflicts = _RESERVED.intersection(params or {})
+    if conflicts:
+        names = ", ".join(f'"{n}"' for n in sorted(conflicts))
+        raise ValueError(
+            f"Param name(s) {names} conflict with vg.spec() variable names. "
+            f"Rename them (e.g. 'data' → 'sample', 'view' → 'layout')."
+        )
     return Spec(
         meta=meta,
         data=data,

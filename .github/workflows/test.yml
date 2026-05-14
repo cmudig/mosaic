@@ -36,6 +36,12 @@ jobs:
 
       - run: pnpm run lint
       - run: pnpm run build
+
+      - name: Verify generated spec outputs remain consistent
+        run: |
+          pnpm run docs:examples
+          git diff --exit-code -- specs/esm specs/json specs/ts specs/python docs/public/specs docs/examples
+
       - run: pnpm run test
 
   python:
@@ -87,6 +93,7 @@ jobs:
           cd packages/vgplot-python
 
           uv run generate-spec-classes
+          git diff --exit-code -- spec_classes/generated_classes.py
           uv run --group dev pytest test/ --cov=spec_classes --cov-report=term-missing --color=yes
 
 

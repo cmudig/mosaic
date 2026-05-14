@@ -12,8 +12,26 @@ class DataDef:
         return self.payload
 
 
-def parquet(file: str) -> DataDef:
-    return DataDef({"type": "parquet", "file": file})
+def parquet(file: str, select: Any = None, where: Any = None, **kwargs: Any) -> DataDef:
+    payload: Dict[str, Any] = {"type": "parquet", "file": file}
+    if select is not None:
+        payload["select"] = select
+    if where is not None:
+        payload["where"] = where
+    payload.update(kwargs)
+    return DataDef(payload)
+
+
+def csv(file: str, **kwargs: Any) -> DataDef:
+    return DataDef({"type": "csv", "file": file, **kwargs})
+
+
+def spatial(file: str, layer: str | None = None, **kwargs: Any) -> DataDef:
+    payload: Dict[str, Any] = {"type": "spatial", "file": file}
+    if layer is not None:
+        payload["layer"] = layer
+    payload.update(kwargs)
+    return DataDef(payload)
 
 
 def table(query: str) -> DataDef:

@@ -1,24 +1,18 @@
 import vgplot as vg
 
-_meta = vg.meta(title="Density 1D", description="Density plots (`densityY` mark) for over 200,000 flights, created using kernel density estimation. Binning is performned in-database, subsequent smoothing in-browser. The distance density uses a log-scaled domain. To change the amount of smoothing, use the slider to set the kernel bandwidth.\n")
-_data = vg.data(
+meta = vg.meta(title="Density 1D", description="Density plots (`densityY` mark) for over 200,000 flights, created using kernel density estimation. Binning is performned in-database, subsequent smoothing in-browser. The distance density uses a log-scaled domain. To change the amount of smoothing, use the slider to set the kernel bandwidth.\n")
+data = vg.data(
     flights=vg.parquet("data/flights-200k.parquet")
 )
 
-brush = vg.Selection.crossfilter()
-bandwidth = vg.Param.value(20)
+brush = vg.selection.crossfilter()
+bandwidth = vg.param(20)
 
-_view = vg.vconcat(
-    vg.slider(label="Bandwidth (σ)", as_=bandwidth, min=0.1, max=100, step=0.1),
+view = vg.vconcat(
+    vg.slider(label="Bandwidth (σ)", bind=bandwidth, min=0.1, max=100, step=0.1),
     vg.plot(
-        vg.density_y(data={
-            "from": "flights",
-            "filterBy": brush
-        }, x="delay", fill="#888", fill_opacity=0.5, bandwidth=bandwidth),
-        {
-            "select": "intervalX",
-            "as": brush
-        },
+        vg.density_y(data="flights", filter_by=brush, x="delay", fill="#888", fill_opacity=0.5, bandwidth=bandwidth),
+        vg.interval_x(bind=brush),
         vg.y_axis(None),
         vg.x_domain("Fixed"),
         vg.width(600),
@@ -26,14 +20,8 @@ _view = vg.vconcat(
         vg.height(200)
     ),
     vg.plot(
-        vg.density_y(data={
-            "from": "flights",
-            "filterBy": brush
-        }, x="distance", fill="#888", fill_opacity=0.5, bandwidth=bandwidth),
-        {
-            "select": "intervalX",
-            "as": brush
-        },
+        vg.density_y(data="flights", filter_by=brush, x="distance", fill="#888", fill_opacity=0.5, bandwidth=bandwidth),
+        vg.interval_x(bind=brush),
         vg.y_axis(None),
         vg.x_scale("log"),
         vg.x_domain("Fixed"),
@@ -43,4 +31,4 @@ _view = vg.vconcat(
     )
 )
 
-spec = vg.spec(meta=_meta, data=_data, params={"brush": brush, "bandwidth": bandwidth}, view=_view)
+spec = vg.spec(meta, data, view)

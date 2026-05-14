@@ -1,25 +1,22 @@
 import vgplot as vg
 
-_meta = vg.meta(title="Density 2D", description="A 2D `density` plot in which circle size indicates the point density. The data is divided by fill color into three sets of densities. To change the amount of smoothing, use the slider to set the kernel bandwidth.\n")
-_data = vg.data(
+meta = vg.meta(title="Density 2D", description="A 2D `density` plot in which circle size indicates the point density. The data is divided by fill color into three sets of densities. To change the amount of smoothing, use the slider to set the kernel bandwidth.\n")
+data = vg.data(
     penguins=vg.parquet("data/penguins.parquet")
 )
 
-bandwidth = vg.Param.value(20)
-bins = vg.Param.value(20)
+bandwidth = vg.param(20)
+bins = vg.param(20)
 
-_view = vg.vconcat(
+view = vg.vconcat(
     vg.hconcat(
-        vg.slider(label="Bandwidth (σ)", as_=bandwidth, min=1, max=100),
-        vg.slider(label="Bins", as_=bins, min=10, max=60)
+        vg.slider(label="Bandwidth (σ)", bind=bandwidth, min=1, max=100),
+        vg.slider(label="Bins", bind=bins, min=10, max=60)
     ),
     vg.plot(
-        vg.density(data=vg.from_("penguins"), x="bill_length", y="bill_depth", r="density", fill="species", fill_opacity=0.5, width=bins, height=bins, bandwidth=bandwidth),
-        vg.dot(data=vg.from_("penguins"), x="bill_length", y="bill_depth", fill="currentColor", r=1),
-        vg.r_range([
-            0,
-            16
-        ]),
+        vg.density(data="penguins", x="bill_length", y="bill_depth", r="density", fill="species", fill_opacity=0.5, width=bins, height=bins, bandwidth=bandwidth),
+        vg.dot(data="penguins", x="bill_length", y="bill_depth", fill="currentColor", r=1),
+        vg.r_range([0, 16]),
         vg.x_axis("bottom"),
         vg.x_label_anchor("center"),
         vg.y_axis("right"),
@@ -30,4 +27,4 @@ _view = vg.vconcat(
     )
 )
 
-spec = vg.spec(meta=_meta, data=_data, params={"bandwidth": bandwidth, "bins": bins}, view=_view)
+spec = vg.spec(meta, data, view)

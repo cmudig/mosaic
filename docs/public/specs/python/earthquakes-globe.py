@@ -1,32 +1,24 @@
 import vgplot as vg
 
-_meta = vg.meta(title="Earthquakes Globe", description="A rotatable globe of earthquake activity. To show land masses, this example loads and parses TopoJSON data in the database. Requires the DuckDB `spatial` extension.\n", credit="Adapted from an [Observable Plot example](https://observablehq.com/@observablehq/plot-earthquake-globe).")
-_data = vg.data(
+meta = vg.meta(title="Earthquakes Globe", description="A rotatable globe of earthquake activity. To show land masses, this example loads and parses TopoJSON data in the database. Requires the DuckDB `spatial` extension.\n", credit="Adapted from an [Observable Plot example](https://observablehq.com/@observablehq/plot-earthquake-globe).")
+data = vg.data(
     earthquakes=vg.parquet("data/earthquakes.parquet"),
-    land={
-    "type": "spatial",
-    "file": "data/countries-110m.json",
-    "layer": "land"
-}
+    land=vg.spatial("data/countries-110m.json", layer="land")
 )
 
-longitude = vg.Param.value(-180)
-latitude = vg.Param.value(-30)
-rotate = vg.Param.array([longitude, latitude])
+longitude = vg.param(-180)
+latitude = vg.param(-30)
+rotate = vg.param([longitude, latitude])
 
-_view = vg.vconcat(
+view = vg.vconcat(
     vg.hconcat(
-        vg.slider(label="Longitude", as_=longitude, min=-180, max=180, step=1),
-        vg.slider(label="Latitude", as_=latitude, min=-90, max=90, step=1)
+        vg.slider(label="Longitude", bind=longitude, min=-180, max=180, step=1),
+        vg.slider(label="Latitude", bind=latitude, min=-90, max=90, step=1)
     ),
     vg.plot(
-        vg.geo(data=vg.from_("land"), geometry={
-            "geojson": "geom"
-        }, fill="currentColor", fill_opacity=0.2),
+        vg.geo(data="land", geometry=vg.geojson("geom"), fill="currentColor", fill_opacity=0.2),
         vg.sphere(),
-        vg.dot(data=vg.from_("earthquakes"), x="longitude", y="latitude", r={
-            "sql": "POW(10, magnitude)"
-        }, stroke="red", fill="red", fill_opacity=0.2),
+        vg.dot(data="earthquakes", x="longitude", y="latitude", r=vg.sql("POW(10, magnitude)"), stroke="red", fill="red", fill_opacity=0.2),
         vg.margin(10),
         vg.style("overflow: visible;"),
         vg.projection_type("orthographic"),
@@ -34,4 +26,4 @@ _view = vg.vconcat(
     )
 )
 
-spec = vg.spec(meta=_meta, data=_data, params={"longitude": longitude, "latitude": latitude, "rotate": rotate}, view=_view)
+spec = vg.spec(meta, data, view)

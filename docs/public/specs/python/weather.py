@@ -1,74 +1,37 @@
 import vgplot as vg
 
-_meta = vg.meta(title="Seattle Weather", description="An interactive view of Seattle's weather, including maximum temperature, amount of precipitation, and type of weather. By dragging on the scatter plot, you can see the proportion of days in that range that have sun, fog, drizzle, rain, or snow.\n", credit="Based on a [Vega-Lite/Altair example](https://vega.github.io/vega-lite/examples/interactive_seattle_weather.html) by Jake Vanderplas.")
-_data = vg.data(
+meta = vg.meta(title="Seattle Weather", description="An interactive view of Seattle's weather, including maximum temperature, amount of precipitation, and type of weather. By dragging on the scatter plot, you can see the proportion of days in that range that have sun, fog, drizzle, rain, or snow.\n", credit="Based on a [Vega-Lite/Altair example](https://vega.github.io/vega-lite/examples/interactive_seattle_weather.html) by Jake Vanderplas.")
+data = vg.data(
     weather=vg.parquet("data/seattle-weather.parquet")
 )
 
-click = vg.Selection.single()
-domain = vg.Param.array(["sun", "fog", "drizzle", "rain", "snow"])
-colors = vg.Param.array(["#e7ba52", "#a7a7a7", "#aec7e8", "#1f77b4", "#9467bd"])
-range = vg.Selection.intersect()
+click = vg.selection.single()
+domain = vg.param(["sun", "fog", "drizzle", "rain", "snow"])
+colors = vg.param(["#e7ba52", "#a7a7a7", "#aec7e8", "#1f77b4", "#9467bd"])
+range = vg.selection.intersect()
 
-_view = vg.vconcat(
+view = vg.vconcat(
     vg.hconcat(
         vg.plot(
-            vg.dot(data={
-                "from": "weather",
-                "filterBy": click
-            }, x={
-                "dateMonthDay": "date"
-            }, y="temp_max", fill="weather", r="precipitation", fill_opacity=0.7),
-            {
-                "select": "intervalX",
-                "as": range,
-                "brush": {
-                    "fill": "none",
-                    "stroke": "#888"
-                }
-            },
-            {
-                "select": "highlight",
-                "by": range,
-                "fill": "#ccc",
-                "fillOpacity": 0.2
-            },
-            {
-                "legend": "color",
-                "as": click,
-                "columns": 1
-            },
+            vg.dot(data="weather", filter_by=click, x=vg.date_month_day("date"), y="temp_max", fill="weather", r="precipitation", fill_opacity=0.7),
+            vg.interval_x(bind=range, brush=vg.brush(fill="none", stroke="#888")),
+            vg.highlight(by=range, fill="#ccc", fill_opacity=0.2),
+            vg.color_legend(bind=click, columns=1),
             vg.xy_domain("Fixed"),
             vg.x_tick_format("%b"),
             vg.color_domain(domain),
             vg.color_range(colors),
             vg.r_domain("Fixed"),
-            vg.r_range([
-                2,
-                10
-            ]),
+            vg.r_range([2, 10]),
             vg.width(680),
             vg.height(300)
         )
     ),
     vg.plot(
-        vg.bar_x(data=vg.from_("weather"), x={
-            "count": ""
-        }, y="weather", fill="#ccc", fill_opacity=0.2),
-        vg.bar_x(data={
-            "from": "weather",
-            "filterBy": range
-        }, x={
-            "count": ""
-        }, y="weather", fill="weather"),
-        {
-            "select": "toggleY",
-            "as": click
-        },
-        {
-            "select": "highlight",
-            "by": click
-        },
+        vg.bar_x(data="weather", x=vg.count(), y="weather", fill="#ccc", fill_opacity=0.2),
+        vg.bar_x(data="weather", filter_by=range, x=vg.count(), y="weather", fill="weather"),
+        vg.toggle_y(bind=click),
+        vg.highlight(by=click),
         vg.x_domain("Fixed"),
         vg.y_domain(domain),
         vg.y_label(None),
@@ -78,4 +41,4 @@ _view = vg.vconcat(
     )
 )
 
-spec = vg.spec(meta=_meta, data=_data, params={"click": click, "domain": domain, "colors": colors, "range": range}, view=_view)
+spec = vg.spec(meta, data, view)

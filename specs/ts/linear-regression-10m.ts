@@ -12,13 +12,13 @@ export const spec : Spec = {
     "flights1p": "SELECT * FROM flights10m USING SAMPLE 1%"
   },
   "params": {
-    "data": "flights10m"
+    "sample": "flights10m"
   },
   "vconcat": [
     {
       "input": "menu",
       "label": "Sample",
-      "as": "$data",
+      "as": "$sample",
       "options": [
         {
           "value": "flights10m",
@@ -46,7 +46,7 @@ export const spec : Spec = {
         {
           "mark": "raster",
           "data": {
-            "from": "$data"
+            "from": "$sample"
           },
           "x": "time",
           "y": "delay",
@@ -57,7 +57,7 @@ export const spec : Spec = {
         {
           "mark": "regressionY",
           "data": {
-            "from": "$data"
+            "from": "$sample"
           },
           "x": "time",
           "y": "delay",
@@ -66,7 +66,7 @@ export const spec : Spec = {
         {
           "mark": "regressionY",
           "data": {
-            "from": "$data",
+            "from": "$sample",
             "filterBy": "$query"
           },
           "x": "time",

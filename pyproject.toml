@@ -2,16 +2,12 @@
 members = [
     "packages/server/duckdb-server",
     "packages/vgplot/widget",
-    "packages/vgplot-python"
+    "packages/vgplot/python"
 ]
 
 # https://github.com/charliermarsh/ruff
 [tool.ruff]
 extend-include = ["*.ipynb"]
-extend-exclude = [
-    "specs/python",
-    "docs/public/specs/python",
-]
 
 
 [tool.setuptools.packages.find]
@@ -23,4 +19,4 @@ package = true
 
 [tool.ruff.lint]
 pydocstyle = { convention = "numpy" }
-ignore = ["G004", "TRY301", "EM102", "EM101", "TRY003", "FBT002", "S608", "TRY002", "ARG001", "E402" ,"F401","F403"]
+ignore = ["G004", "TRY301", "EM102", "EM101", "TRY003", "FBT002", "S608", "TRY002", "ARG001"]

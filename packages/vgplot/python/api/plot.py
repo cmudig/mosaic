@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from .util import camelize, omit_none
 from .params import _ParamBase
+from .data import DataDef
 
 
 class FromRef:
@@ -55,7 +56,11 @@ class Mark:
         return payload
 
 
-def encode_value(v: Any, param_names: Dict[str, str] | None = None) -> Any:
+def encode_value(v: Any, param_names: Dict[str, str] | None = None, data_names: Dict[int, str] | None = None) -> Any:
+    if isinstance(v, DataDef):
+        if data_names and id(v) in data_names:
+            return {"from": data_names[id(v)]}
+        return v
     if isinstance(v, _ParamBase):
         # Resolve to "$name" ref using the reverse lookup table
         if param_names and id(v) in param_names:
@@ -66,13 +71,15 @@ def encode_value(v: Any, param_names: Dict[str, str] | None = None) -> Any:
     if isinstance(v, Mark):
         return v.to_dict()
     if isinstance(v, list):
-        return [encode_value(x, param_names) for x in v]
+        return [encode_value(x, param_names, data_names) for x in v]
     if isinstance(v, dict):
-        return {k: encode_value(val, param_names) for k, val in v.items()}
+        return {k: encode_value(val, param_names, data_names) for k, val in v.items()}
     return v
 
 
-def plot(*items: Union[Mark, Directive], param_names: Dict[str, str] | None = None) -> Dict[str, Any]:
+def plot(
+    *items: Union[Mark, Directive], param_names: Dict[str, str] | None = None
+) -> Dict[str, Any]:
     marks: List[Dict[str, Any]] = []
     directives: Dict[str, Any] = {}
     for item in items:
@@ -222,16 +229,20 @@ def y_tick_size(value: Any) -> Directive:
     return Directive("y_tick_size", value)
 
 
-def _encode_component(item: Any, param_names: Dict[str, str] | None) -> Any:
+def _encode_component(item: Any, param_names: Dict[str, str] | None, data_names: Dict[int, str] | None = None) -> Any:
     if isinstance(item, dict) and "plot" in item:
         # re-encode an already-built plot dict so param refs resolve
         marks = [
-            ({k: encode_value(v, param_names) for k, v in m.items()} if isinstance(m, dict) else m)
+            (
+                {k: encode_value(v, param_names, data_names) for k, v in m.items()}
+                if isinstance(m, dict)
+                else m
+            )
             for m in item["plot"]
         ]
-        rest = {k: encode_value(v, param_names) for k, v in item.items() if k != "plot"}
+        rest = {k: encode_value(v, param_names, data_names) for k, v in item.items() if k != "plot"}
         return {"plot": marks, **rest}
-    return encode_value(item, param_names)
+    return encode_value(item, param_names, data_names)
 
 
 # Layout helpers
@@ -271,16 +282,63 @@ def _interactor(select: str, **opts: Any) -> Dict[str, Any]:
     return omit_none({"select": select, **opts})
 
 
-def interval_x(bind: Any = None, field: Any = None, pixel_size: Any = None, peers: Any = None, brush: Any = None) -> Dict[str, Any]:
-    return _interactor("intervalX", **{"as": bind, "field": field, "pixelSize": pixel_size, "peers": peers, "brush": brush})
+def interval_x(
+    bind: Any = None,
+    field: Any = None,
+    pixel_size: Any = None,
+    peers: Any = None,
+    brush: Any = None,
+) -> Dict[str, Any]:
+    return _interactor(
+        "intervalX",
+        **{
+            "as": bind,
+            "field": field,
+            "pixelSize": pixel_size,
+            "peers": peers,
+            "brush": brush,
+        },
+    )
 
 
-def interval_y(bind: Any = None, field: Any = None, pixel_size: Any = None, peers: Any = None, brush: Any = None) -> Dict[str, Any]:
-    return _interactor("intervalY", **{"as": bind, "field": field, "pixelSize": pixel_size, "peers": peers, "brush": brush})
+def interval_y(
+    bind: Any = None,
+    field: Any = None,
+    pixel_size: Any = None,
+    peers: Any = None,
+    brush: Any = None,
+) -> Dict[str, Any]:
+    return _interactor(
+        "intervalY",
+        **{
+            "as": bind,
+            "field": field,
+            "pixelSize": pixel_size,
+            "peers": peers,
+            "brush": brush,
+        },
+    )
 
 
-def interval_xy(bind: Any = None, xfield: Any = None, yfield: Any = None, pixel_size: Any = None, peers: Any = None, brush: Any = None) -> Dict[str, Any]:
-    return _interactor("intervalXY", **{"as": bind, "xfield": xfield, "yfield": yfield, "pixelSize": pixel_size, "peers": peers, "brush": brush})
+def interval_xy(
+    bind: Any = None,
+    xfield: Any = None,
+    yfield: Any = None,
+    pixel_size: Any = None,
+    peers: Any = None,
+    brush: Any = None,
+) -> Dict[str, Any]:
+    return _interactor(
+        "intervalXY",
+        **{
+            "as": bind,
+            "xfield": xfield,
+            "yfield": yfield,
+            "pixelSize": pixel_size,
+            "peers": peers,
+            "brush": brush,
+        },
+    )
 
 
 def toggle(bind: Any = None, channels: Any = None, peers: Any = None) -> Dict[str, Any]:
@@ -299,23 +357,40 @@ def toggle_color(bind: Any = None, peers: Any = None) -> Dict[str, Any]:
     return _interactor("toggleColor", **{"as": bind, "peers": peers})
 
 
-def nearest_x(bind: Any = None, field: Any = None, channels: Any = None) -> Dict[str, Any]:
+def nearest_x(
+    bind: Any = None, field: Any = None, channels: Any = None
+) -> Dict[str, Any]:
     return _interactor("nearestX", **{"as": bind, "field": field, "channels": channels})
 
 
-def nearest_y(bind: Any = None, field: Any = None, channels: Any = None) -> Dict[str, Any]:
+def nearest_y(
+    bind: Any = None, field: Any = None, channels: Any = None
+) -> Dict[str, Any]:
     return _interactor("nearestY", **{"as": bind, "field": field, "channels": channels})
 
 
-def region(bind: Any = None, channels: Any = None, peers: Any = None, brush: Any = None) -> Dict[str, Any]:
-    return _interactor("region", **{"as": bind, "channels": channels, "peers": peers, "brush": brush})
+def region(
+    bind: Any = None, channels: Any = None, peers: Any = None, brush: Any = None
+) -> Dict[str, Any]:
+    return _interactor(
+        "region", **{"as": bind, "channels": channels, "peers": peers, "brush": brush}
+    )
 
 
 def highlight(by: Any = None, channels: Any = None, **kwargs: Any) -> Dict[str, Any]:
-    return omit_none({"select": "highlight", "by": by, "channels": channels, **{camelize(k): v for k, v in kwargs.items()}})
+    return omit_none(
+        {
+            "select": "highlight",
+            "by": by,
+            "channels": channels,
+            **{camelize(k): v for k, v in kwargs.items()},
+        }
+    )
 
 
-def pan(x: Any = None, y: Any = None, xfield: Any = None, yfield: Any = None) -> Dict[str, Any]:
+def pan(
+    x: Any = None, y: Any = None, xfield: Any = None, yfield: Any = None
+) -> Dict[str, Any]:
     return _interactor("pan", x=x, y=y, xfield=xfield, yfield=yfield)
 
 
@@ -327,7 +402,9 @@ def pan_y(y: Any = None, yfield: Any = None) -> Dict[str, Any]:
     return _interactor("panY", y=y, yfield=yfield)
 
 
-def pan_zoom(x: Any = None, y: Any = None, xfield: Any = None, yfield: Any = None) -> Dict[str, Any]:
+def pan_zoom(
+    x: Any = None, y: Any = None, xfield: Any = None, yfield: Any = None
+) -> Dict[str, Any]:
     return _interactor("panZoom", x=x, y=y, xfield=xfield, yfield=yfield)
 
 
@@ -340,20 +417,60 @@ def pan_zoom_y(y: Any = None, yfield: Any = None) -> Dict[str, Any]:
 
 
 # Legend helpers
-def _legend(kind: str, plot: Any = None, bind: Any = None, label: Any = None, columns: Any = None, **kwargs: Any) -> Dict[str, Any]:
-    return omit_none({"legend": kind, "for": plot, "as": bind, "label": label, "columns": columns, **{camelize(k): v for k, v in kwargs.items()}})
+def _legend(
+    kind: str,
+    plot: Any = None,
+    bind: Any = None,
+    label: Any = None,
+    columns: Any = None,
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    return omit_none(
+        {
+            "legend": kind,
+            "for": plot,
+            "as": bind,
+            "label": label,
+            "columns": columns,
+            **{camelize(k): v for k, v in kwargs.items()},
+        }
+    )
 
 
-def color_legend(plot: Any = None, bind: Any = None, label: Any = None, columns: Any = None, **kwargs: Any) -> Dict[str, Any]:
-    return _legend("color", plot=plot, bind=bind, label=label, columns=columns, **kwargs)
+def color_legend(
+    plot: Any = None,
+    bind: Any = None,
+    label: Any = None,
+    columns: Any = None,
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    return _legend(
+        "color", plot=plot, bind=bind, label=label, columns=columns, **kwargs
+    )
 
 
-def opacity_legend(plot: Any = None, bind: Any = None, label: Any = None, columns: Any = None, **kwargs: Any) -> Dict[str, Any]:
-    return _legend("opacity", plot=plot, bind=bind, label=label, columns=columns, **kwargs)
+def opacity_legend(
+    plot: Any = None,
+    bind: Any = None,
+    label: Any = None,
+    columns: Any = None,
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    return _legend(
+        "opacity", plot=plot, bind=bind, label=label, columns=columns, **kwargs
+    )
 
 
-def symbol_legend(plot: Any = None, bind: Any = None, label: Any = None, columns: Any = None, **kwargs: Any) -> Dict[str, Any]:
-    return _legend("symbol", plot=plot, bind=bind, label=label, columns=columns, **kwargs)
+def symbol_legend(
+    plot: Any = None,
+    bind: Any = None,
+    label: Any = None,
+    columns: Any = None,
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    return _legend(
+        "symbol", plot=plot, bind=bind, label=label, columns=columns, **kwargs
+    )
 
 
 # Input helpers
@@ -366,7 +483,11 @@ def input(kind: str, **opts: Any) -> Dict[str, Any]:
         if v is None:
             continue
         key = _INPUT_ALIASES.get(k, camelize(k))
-        if key == "options" and isinstance(v, list) and any(isinstance(i, dict) for i in v):
+        if (
+            key == "options"
+            and isinstance(v, list)
+            and any(isinstance(i, dict) for i in v)
+        ):
             v = [{"label": i, "value": i} if not isinstance(i, dict) else i for i in v]
         payload[key] = v
     return payload
@@ -382,7 +503,14 @@ def slider(
     **opts: Any,
 ) -> Dict[str, Any]:
     return input(
-        "slider", label=label, bind=bind, min=min, max=max, step=step, value=value, **opts
+        "slider",
+        label=label,
+        bind=bind,
+        min=min,
+        max=max,
+        step=step,
+        value=value,
+        **opts,
     )
 
 
@@ -419,8 +547,17 @@ def menu(
     filter_by: Any = None,
     **opts: Any,
 ) -> Dict[str, Any]:
-    return input("menu", label=label, bind=bind, options=options, value=value,
-                 source=source, column=column, filter_by=filter_by, **opts)
+    return input(
+        "menu",
+        label=label,
+        bind=bind,
+        options=options,
+        value=value,
+        source=source,
+        column=column,
+        filter_by=filter_by,
+        **opts,
+    )
 
 
 def search(
@@ -432,8 +569,16 @@ def search(
     type: Any = None,
     **opts: Any,
 ) -> Dict[str, Any]:
-    return input("search", label=label, bind=bind, source=source, column=column,
-                 filter_by=filter_by, type=type, **opts)
+    return input(
+        "search",
+        label=label,
+        bind=bind,
+        source=source,
+        column=column,
+        filter_by=filter_by,
+        type=type,
+        **opts,
+    )
 
 
 def table_input(
@@ -448,12 +593,23 @@ def table_input(
     align: Any = None,
     **opts: Any,
 ) -> Dict[str, Any]:
-    return input("table", source=source, bind=bind, columns=columns, filter_by=filter_by,
-                 width=width, height=height, max_width=max_width, row_batch=row_batch,
-                 align=align, **opts)
+    return input(
+        "table",
+        source=source,
+        bind=bind,
+        columns=columns,
+        filter_by=filter_by,
+        width=width,
+        height=height,
+        max_width=max_width,
+        row_batch=row_batch,
+        align=align,
+        **opts,
+    )
 
 
 # Mark helpers
+
 
 def area(data: Any = None, **enc: Any) -> Mark:
     return Mark("area", data=data, enc=enc)
@@ -653,6 +809,7 @@ def spike(data: Any = None, **enc: Any) -> Mark:
 
 # Plot attribute helpers
 
+
 def name(value: Any) -> Directive:
     return Directive("name", value)
 
@@ -714,6 +871,7 @@ def round(value: Any) -> Directive:
 
 
 # X scale helpers
+
 
 def x_scale(value: Any) -> Directive:
     return Directive("x_scale", value)
@@ -817,6 +975,7 @@ def x_zero(value: bool = True) -> Directive:
 
 # Y scale helpers
 
+
 def y_scale(value: Any) -> Directive:
     return Directive("y_scale", value)
 
@@ -915,6 +1074,7 @@ def y_zero(value: bool = True) -> Directive:
 
 # Color scale helpers
 
+
 def color_range(value: Any) -> Directive:
     return Directive("color_range", value)
 
@@ -961,6 +1121,7 @@ def color_tick_format(value: Any) -> Directive:
 
 # Opacity scale helpers
 
+
 def opacity_scale(value: Any) -> Directive:
     return Directive("opacity_scale", value)
 
@@ -999,6 +1160,7 @@ def opacity_tick_format(value: Any) -> Directive:
 
 # R scale helpers
 
+
 def r_scale(value: Any) -> Directive:
     return Directive("r_scale", value)
 
@@ -1025,6 +1187,7 @@ def r_zero(value: bool = True) -> Directive:
 
 # Length scale helpers
 
+
 def length_scale(value: Any) -> Directive:
     return Directive("length_scale", value)
 
@@ -1050,6 +1213,7 @@ def length_zero(value: bool = True) -> Directive:
 
 
 # FX scale helpers
+
 
 def fx_domain(value: Any) -> Directive:
     return Directive("fx_domain", value)
@@ -1145,6 +1309,7 @@ def fx_reverse(value: bool = True) -> Directive:
 
 # FY scale helpers
 
+
 def fy_domain(value: Any) -> Directive:
     return Directive("fy_domain", value)
 
@@ -1239,6 +1404,7 @@ def fy_reverse(value: bool = True) -> Directive:
 
 # Facet helpers
 
+
 def facet_margin(value: Any) -> Directive:
     return Directive("facet_margin", value)
 
@@ -1268,6 +1434,7 @@ def facet_label(value: Any) -> Directive:
 
 
 # Projection helpers
+
 
 def projection_type(value: Any) -> Directive:
     return Directive("projection_type", value)

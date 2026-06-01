@@ -37,7 +37,7 @@ class MosaicWidget(anywidget.AnyWidget):
 
     def __init__(
         self,
-        spec: dict | None = None,
+        spec=None,
         con: duckdb.DuckDBPyConnection | None = None,
         data: dict[str, "IntoFrame"] | None = None,
         *args,
@@ -46,27 +46,56 @@ class MosaicWidget(anywidget.AnyWidget):
         """Create a Mosaic widget.
 
         Args:
-            spec (dict, optional): The initial Mosaic specification. Defaults to {}.
-            con (connection, optional): A DuckDB connection.
-                Defaults to duckdb.connect().
+            spec: A Mosaic spec dict **or** a ``Spec`` object (anything with
+                a ``to_dict()`` method).  Defaults to {}.
+            con (connection, optional): A DuckDB connection.  Falls back to
+                ``vg.get_default_connection()``, then ``duckdb.connect()``.
             data (dict, optional): DataFrames/Arrow objects to "register" with DuckDB.
                 Defaults to {}. Keys are table names, values are objects to register as
                 virtual tables (similar to SQL VIEWs). Supports pandas/polars DataFrames
                 and other Arrow objects.
+
+                Any frames previously added via ``vg.register()`` are merged in
+                automatically (explicit *data* keys win on name collision).
         """
         if data is None:
             data = {}
+
         if spec is None:
             spec = {}
+        elif hasattr(spec, "to_dict"):
+            spec = spec.to_dict()
+
         if con is None:
-            con = duckdb.connect()
+            con = self._find_default_connection() or duckdb.connect()
+
+        registry = self._get_vgplot_registry()
+        merged = {**registry, **data}
 
         super().__init__(*args, **kwargs)
         self.spec = spec
         self.con = con
-        for name, df in data.items():
+        for name, df in merged.items():
             self.con.register(name, frame_to_duckdb_registrable(df))
         self.on_msg(self._handle_custom_msg)
+
+    @staticmethod
+    def _get_vgplot_registry() -> dict:
+        """Import the vgplot registry if available."""
+        try:
+            from api.data import get_registry
+            return get_registry()
+        except ImportError:
+            return {}
+
+    @staticmethod
+    def _find_default_connection():
+        """Import the vgplot default connection if set."""
+        try:
+            from api.data import get_default_connection
+            return get_default_connection()
+        except ImportError:
+            return None
 
     def _handle_custom_msg(self, content: dict, buffers: list) -> None:
         logger.debug(f"{content=}, {buffers=}")

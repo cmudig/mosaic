@@ -1,5 +1,6 @@
 from .spec import meta, spec, Spec
-from .data import parquet, csv, spatial, table, data
+from .data import parquet, csv, spatial, table, data, register, get_registry, clear_registry
+from .data import set_default_connection, get_default_connection
 from .params import param, selection
 from .encodings import (
     sql,
@@ -317,6 +318,19 @@ from .plot import (
     symbol_legend,
 )
 
+def connection(con) -> None:
+    """Set the default DuckDB connection for all subsequent widgets.
+
+    Usage::
+
+        import duckdb
+        con = duckdb.connect()
+        con.query("CREATE TABLE athletes AS FROM 'data/athletes.parquet'")
+        vg.connection(con)
+    """
+    set_default_connection(con)
+
+
 __all__ = [
     # spec
     "meta",
@@ -328,6 +342,11 @@ __all__ = [
     "spatial",
     "table",
     "data",
+    # registry
+    "register",
+    "get_registry",
+    "clear_registry",
+    "connection",
     # params
     "param",
     "selection",

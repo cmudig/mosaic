@@ -4,6 +4,56 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 
+# ---------------------------------------------------------------------------
+# Global data registry
+# ---------------------------------------------------------------------------
+
+_registry: Dict[str, Any] = {}
+_default_connection: Any = None
+
+
+def register(name: str, frame: Any) -> str:
+    """Register an in-memory DataFrame under *name* and return that name.
+
+    The returned string can be passed directly to marks as the ``data``
+    argument.  ``MosaicWidget`` will pick it up automatically via
+    ``get_registry()`` and register it with DuckDB.
+
+    Supports polars, pandas, and pyarrow objects::
+
+        athletes = vg.register("athletes", pl.read_parquet("athletes.parquet"))
+        view = vg.plot(vg.dot(athletes, x="weight", y="height"), vg.width(600))
+        MosaicWidget(view)
+    """
+    _registry[name] = frame
+    return name
+
+
+def get_registry() -> Dict[str, Any]:
+    """Return a *copy* of all registered frames."""
+    return dict(_registry)
+
+
+def clear_registry() -> None:
+    """Remove all registered frames."""
+    _registry.clear()
+
+
+def set_default_connection(con: Any) -> None:
+    """Set the default DuckDB connection for widgets."""
+    global _default_connection
+    _default_connection = con
+
+
+def get_default_connection() -> Any:
+    """Return the default connection, or ``None``."""
+    return _default_connection
+
+
+# ---------------------------------------------------------------------------
+# Data definitions (file-based / SQL-based)
+# ---------------------------------------------------------------------------
+
 @dataclass
 class DataDef:
     payload: Dict[str, Any]

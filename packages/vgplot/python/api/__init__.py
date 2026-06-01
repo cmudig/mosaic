@@ -1,6 +1,6 @@
 from .spec import meta, spec, Spec
 from .data import parquet, csv, spatial, table, data, register, get_registry, clear_registry
-from .data import set_default_connection, get_default_connection
+from .data import set_default_connection
 from .params import param, selection
 from .encodings import (
     sql,

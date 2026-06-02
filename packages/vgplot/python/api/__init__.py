@@ -1,5 +1,5 @@
 from .spec import meta, spec, Spec
-from .data import parquet, csv, spatial, table, data
+from .data import parquet, csv, spatial, table, data, FrameDef
 from .params import param, selection
 from .encodings import (
     sql,
@@ -23,6 +23,7 @@ from .encodings import (
 )
 from .plot import (
     plot,
+    PlotData,
     source,
     mark,
     directive,
@@ -328,11 +329,13 @@ __all__ = [
     "spatial",
     "table",
     "data",
+    "FrameDef",
     # params
     "param",
     "selection",
     # plot core
     "plot",
+    "PlotData",
     "source",
     "mark",
     "directive",

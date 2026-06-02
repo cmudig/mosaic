@@ -4,6 +4,18 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 
+FRAME_MODULES = frozenset({"pandas", "polars", "pyarrow"})
+
+
+def _is_frame_like(obj: Any) -> bool:
+    return type(obj).__module__.split(".")[0] in FRAME_MODULES
+
+
+class FrameDef:
+    def __init__(self, frame: Any) -> None:
+        self.frame = frame
+
+
 @dataclass
 class DataDef:
     payload: Dict[str, Any]

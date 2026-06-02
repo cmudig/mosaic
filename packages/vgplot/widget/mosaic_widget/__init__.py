@@ -46,7 +46,8 @@ class MosaicWidget(anywidget.AnyWidget):
         """Create a Mosaic widget.
 
         Args:
-            spec (dict, optional): The initial Mosaic specification. Defaults to {}.
+            spec (dict, optional): The initial Mosaic specification, or a PlotData
+                object returned by vg.plot(). Defaults to {}.
             con (connection, optional): A DuckDB connection.
                 Defaults to duckdb.connect().
             data (dict, optional): DataFrames/Arrow objects to "register" with DuckDB.
@@ -61,10 +62,18 @@ class MosaicWidget(anywidget.AnyWidget):
         if con is None:
             con = duckdb.connect()
 
+        # If spec is a PlotData (vg.plot() result), extract frames and get clean spec dict
+        frames_from_view: dict = {}
+        if hasattr(spec, "frames") and hasattr(spec, "spec"):
+            frames_from_view = spec.frames
+            spec = spec.spec()
+
+        all_data = {**frames_from_view, **data}
+
         super().__init__(*args, **kwargs)
         self.spec = spec
         self.con = con
-        for name, df in data.items():
+        for name, df in all_data.items():
             self.con.register(name, frame_to_duckdb_registrable(df))
         self.on_msg(self._handle_custom_msg)
 

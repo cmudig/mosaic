@@ -161,12 +161,19 @@ class Spec:
     def to_json(self, **kwargs: Any) -> str:
         return json.dumps(self.to_dict(), **kwargs)
 
+    @property
+    def frames(self) -> dict:
+        #Dataframes from PlotData views are passed separately to MosaicWidget.
+        if hasattr(self.view, "frames"):
+            return self.view.frames
+        return {}
+
     def _repr_mimebundle_(self, **kwargs):
         try:
             from mosaic_widget import MosaicWidget
         except ImportError:
             return {"text/plain": repr(self)}
-        widget = MosaicWidget(self.to_dict())
+        widget = MosaicWidget(self.to_dict(), data=self.frames)
         return widget._repr_mimebundle_(**kwargs)
 
     def show(self, con=None, data=None):
@@ -175,7 +182,7 @@ class Spec:
             from IPython.display import display
         except ImportError as e:
             raise ImportError("pip install mosaic-widget") from e
-        widget = MosaicWidget(self.to_dict(), con=con, data=data)
+        widget = MosaicWidget(self.to_dict(), con=con, data={**self.frames, **(data or {})})
         display(widget)
 
 

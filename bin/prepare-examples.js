@@ -14,7 +14,6 @@ import {
   readdir,
   readFile,
   writeFile,
-  mkdir,
 } from 'node:fs/promises';
 import { parseSpec } from '../packages/vgplot/spec/src/parse-spec.js';
 import { astToESM } from '../packages/vgplot/spec/src/ast-to-esm.js';
@@ -40,12 +39,6 @@ const specToTS = spec => {
 export const spec : Spec = ${JSON.stringify(spec, 0, 2)};
 `;
 }
-
-// Create directories if they don't exist
-await Promise.all([
-  mkdir(pythonTestDir, { recursive: true }),
-  mkdir(pythonDocsDir, { recursive: true }),
-]).catch(console.error);
 
 const files = await Promise.allSettled((await readdir(specDir))
   .filter(name => extname(name) === '.yaml')
@@ -100,6 +93,14 @@ const files = await Promise.allSettled((await readdir(specDir))
     return base;
   })
 );
+
+// output successfully written examples
+console.log(JSON.stringify(
+  files
+    .filter(x => x.status === 'fulfilled')
+    .map(x => x.value),
+  0, 2
+));
 
 // output unsuccessful example errors
 files

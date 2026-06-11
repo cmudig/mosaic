@@ -2,72 +2,11 @@
 title: Attributes
 ---
 <script setup>
-  import { ref, onMounted, onUnmounted } from 'vue';
-
-  /** @type {import('vue').Ref<'js' | 'python'>} */
-  const language = ref('js');
-
-  function parseLang(search) {
-    const q = new URLSearchParams(search || '').get('lang');
-    if (q === 'python') return 'python';
-    return 'js';
-  }
-
-  function applyLangToUrl(lang) {
-    if (typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    url.searchParams.set('lang', lang);
-    const next = url.pathname + url.search + url.hash;
-    const cur =
-      window.location.pathname + window.location.search + window.location.hash;
-    if (next !== cur) {
-      history.replaceState(history.state, '', next);
-    }
-  }
-
-  function setLanguage(lang) {
-    language.value = lang;
-    applyLangToUrl(lang);
-  }
-
-  function onPopState() {
-    language.value = parseLang(window.location.search);
-  }
-
-  onMounted(() => {
-    const search = window.location.search;
-    language.value = parseLang(search);
-    if (!new URLSearchParams(search).has('lang')) {
-      applyLangToUrl(language.value);
-    }
-    window.addEventListener('popstate', onPopState);
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener('popstate', onPopState);
-  });
+  import { useLang } from '../../.vitepress/theme/useLang.js';
+  const { language, setLanguage } = useLang();
 </script>
 
-<div class="vgplot-toggle" role="tablist" aria-label="Attributes documentation language">
-  <button
-    role="tab"
-    type="button"
-    :aria-selected="language === 'js'"
-    :class="{ active: language === 'js' }"
-    @click="setLanguage('js')"
-  >
-    JS
-  </button>
-  <button
-    role="tab"
-    type="button"
-    :aria-selected="language === 'python'"
-    :class="{ active: language === 'python' }"
-    @click="setLanguage('python')"
-  >
-    Python
-  </button>
-</div>
+<LangToggle :model-value="language" aria-label="Attributes documentation language" @update:model-value="setLanguage" />
 
 # Attributes
 
@@ -80,11 +19,13 @@ In addition to value arrays, scale domain attributes accept the `Fixed` symbol.
 
 </template>
 
-<template v-else>
+<template v-else-if="language === 'python'">
 
 In addition to value arrays, scale domain attributes accept the string `"Fixed"` for a fixed domain (for example `vg.x_domain("Fixed")`).
 
 </template>
+
+<LangError v-else :language="language" />
 
 This setting indicates that the scale domain should first be determined by the data, but should then be held fixed across subsequent data updates.
 A fixed domain will remain stable, preventing "jumps" in a display that might hamper interpretation of changes.
@@ -107,7 +48,7 @@ plot(
 
 </template>
 
-<template v-else>
+<template v-else-if="language === 'python'">
 
 Attributes are passed as directives to `vg.plot`, together with marks, interactors, and legends:
 
@@ -124,6 +65,8 @@ vg.plot(
 ```
 
 </template>
+
+<LangError v-else :language="language" />
 
 ## Plot Attributes
 
@@ -345,7 +288,7 @@ Interval interactors are not currently supported when cartographic projections a
 
 </template>
 
-<template v-else>
+<template v-else-if="language === 'python'">
 
 - `name(value)`: Set a globally unique name by which to refer to the plot.
 - `style(value)`: Set CSS styles to apply to the plot output.
@@ -562,3 +505,5 @@ Interval interactors are not currently supported when cartographic projections a
 :::
 
 </template>
+
+<LangError v-else :language="language" />

@@ -2,72 +2,11 @@
 title: Plot
 ---
 <script setup>
-  import { ref, onMounted, onUnmounted } from 'vue';
-
-  /** @type {import('vue').Ref<'js' | 'python'>} */
-  const language = ref('js');
-
-  function parseLang(search) {
-    const q = new URLSearchParams(search || '').get('lang');
-    if (q === 'python') return 'python';
-    return 'js';
-  }
-
-  function applyLangToUrl(lang) {
-    if (typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    url.searchParams.set('lang', lang);
-    const next = url.pathname + url.search + url.hash;
-    const cur =
-      window.location.pathname + window.location.search + window.location.hash;
-    if (next !== cur) {
-      history.replaceState(history.state, '', next);
-    }
-  }
-
-  function setLanguage(lang) {
-    language.value = lang;
-    applyLangToUrl(lang);
-  }
-
-  function onPopState() {
-    language.value = parseLang(window.location.search);
-  }
-
-  onMounted(() => {
-    const search = window.location.search;
-    language.value = parseLang(search);
-    if (!new URLSearchParams(search).has('lang')) {
-      applyLangToUrl(language.value);
-    }
-    window.addEventListener('popstate', onPopState);
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener('popstate', onPopState);
-  });
+  import { useLang } from '../../.vitepress/theme/useLang.js';
+  const { language, setLanguage } = useLang();
 </script>
 
-<div class="vgplot-toggle" role="tablist" aria-label="Plot documentation language">
-  <button
-    role="tab"
-    type="button"
-    :aria-selected="language === 'js'"
-    :class="{ active: language === 'js' }"
-    @click="setLanguage('js')"
-  >
-    JS
-  </button>
-  <button
-    role="tab"
-    type="button"
-    :aria-selected="language === 'python'"
-    :class="{ active: language === 'python' }"
-    @click="setLanguage('python')"
-  >
-    Python
-  </button>
-</div>
+<LangToggle :model-value="language" aria-label="Plot documentation language" @update:model-value="setLanguage" />
 
 # Plot {#plot-page}
 
@@ -86,7 +25,7 @@ plot(
 
 </template>
 
-<template v-else>
+<template v-else-if="language === 'python'">
 
 ``` python
 import mosaic.vgplot as vg
@@ -101,6 +40,8 @@ vg.plot(
 
 </template>
 
+<LangError v-else :language="language" />
+
 ## plot
 
 <template v-if="language === 'js'">
@@ -111,13 +52,15 @@ Create a new `Plot` instance based on the provided _directives_ and return the c
 
 </template>
 
-<template v-else>
+<template v-else-if="language === 'python'">
 
 `vg.plot(...directives)`
 
 Build a plot specification from the provided _directives_ for use with Mosaic widgets or other consumers.
 
 </template>
+
+<LangError v-else :language="language" />
 
 ## Plot {#plot-class}
 
@@ -234,7 +177,7 @@ The _include_ flag (default `true`) indicates if the legend should be included w
 Called by [legend directives](./legends).
 </template>
 
-<template v-else>
+<template v-else-if="language === 'python'">
 
 `new Plot(element)`
 
@@ -346,3 +289,5 @@ Add a _legend_ associated with this plot.
 The _include_ flag (default `true`) indicates if the legend should be included within the same container element as the plot.
 Called by [legend directives](./legends).
 </template>
+
+<LangError v-else :language="language" />

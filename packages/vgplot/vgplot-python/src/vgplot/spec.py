@@ -44,44 +44,10 @@ def _collect_datadefs(node: Any) -> list[DataDef]:
     return []
 
 
-class Meta:
-    def __init__(
-        self,
-        title: str | None = None,
-        description: str | None = None,
-        credit: str | None = None,
-        **extra: Any,
-    ) -> None:
-        self.title = title
-        self.description = description
-        self.credit = credit
-        self.extra = extra
-
-    def to_dict(self) -> Dict[str, Any]:
-        return omit_none(
-            {
-                "title": self.title,
-                "description": self.description,
-                "credit": self.credit,
-                **self.extra,
-            }
-        )
-
-
-def meta(
-    title: str | None = None,
-    description: str | None = None,
-    credit: str | None = None,
-    **extra: Any,
-) -> Meta:
-    return Meta(title=title, description=description, credit=credit, **extra)
-
-
 class Spec:
     def __init__(
         self,
         *,
-        meta: Meta | Dict[str, Any] | None = None,
         data: Dict[str, Any] | None = None,
         data_names: Dict[int, str] | None = None,
         params: Dict[str, Any] | None = None,
@@ -91,7 +57,6 @@ class Spec:
         view: Dict[str, Any] | None = None,
         **extra: Any,
     ) -> None:
-        self.meta = meta.to_dict() if hasattr(meta, "to_dict") else meta
         # Serialize any DataDef values in data and build id→name mapping
         resolved_data: Dict[str, Any] = {}
         resolved_data_names: Dict[int, str] = dict(data_names or {})
@@ -158,8 +123,6 @@ class Spec:
         merged_data = {**(self.data or {}), **extra_data} or None
 
         base: Dict[str, Any] = {}
-        if self.meta:
-            base["meta"] = self.meta
         if self.config:
             base["config"] = self.config
         if merged_data:
@@ -274,7 +237,6 @@ _VIEW_KEYS = {"plot", "vconcat", "hconcat", "hspace", "vspace", "input"}
 
 def spec(
     *args: Any,
-    meta: Meta | Dict[str, Any] | None = None,
     data: Dict[str, Any] | None = None,
     params: Dict[str, Any] | None = None,
     plotDefaults: Dict[str, Any] | None = None,
@@ -284,9 +246,7 @@ def spec(
     **extra: Any,
 ) -> Spec:
     for arg in args:
-        if isinstance(arg, Meta):
-            meta = arg
-        elif isinstance(arg, dict) and _VIEW_KEYS.intersection(arg):
+        if isinstance(arg, dict) and _VIEW_KEYS.intersection(arg):
             view = arg
         elif isinstance(arg, dict):
             data = arg
@@ -315,7 +275,6 @@ def spec(
         params = frame_params or None
 
     return Spec(
-        meta=meta,
         data=merged_data,
         params=params,
         plotDefaults=plotDefaults,

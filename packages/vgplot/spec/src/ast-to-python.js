@@ -36,7 +36,8 @@ function buildArgs(opts, ctx, keyMap = null) {
 export function astToPython(ast) {
   const ctx = new PythonCodegenContext();
   const json = ast.toJSON();
-  const { meta, config, data = {}, params = {}, plotDefaults, ...view } = json;
+  const { config, data = {}, params = {}, plotDefaults, ...view } = json;
+  delete view.meta;
 
   // Pre-compute data variable names - suffix with _data when a param has the same name
   const paramNameSet = new Set(Object.keys(params));

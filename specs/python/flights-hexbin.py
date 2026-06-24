@@ -63,5 +63,3 @@ view = vg.vconcat(
         ),
     ),
 )
-
-view

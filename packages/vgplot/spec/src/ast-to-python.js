@@ -74,8 +74,6 @@ export function astToPython(ast) {
   if (plotDefaults) topKwargs.push(`plot_defaults=${literal(plotDefaults)}`);
   if (config) topKwargs.push(`config=${literal(config)}`);
   ctx.emit(`view = ${emitComponent(view, ctx, topKwargs)}`);
-  ctx.blank();
-  ctx.emit('view');
 
   return ctx.toString();
 }

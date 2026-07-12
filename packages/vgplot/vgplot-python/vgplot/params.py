@@ -1,6 +1,16 @@
 from __future__ import annotations
 
+import datetime
 from typing import Any
+
+
+def _serialize_date(v: Any) -> Any:
+    """Convert date/datetime objects to the Mosaic spec {"date": "..."} format."""
+    if isinstance(v, datetime.datetime):
+        return {"date": v.isoformat()}
+    if isinstance(v, datetime.date):
+        return {"date": v.isoformat()}
+    return v
 
 
 def _resolve(v: Any, param_names: "dict[int, str] | None") -> Any:
@@ -26,7 +36,7 @@ class ParamValue(_ParamBase):
         self._value = value
 
     def param_def(self, **_: Any) -> Any:
-        return self._value
+        return _serialize_date(self._value)
 
     def __repr__(self) -> str:
         return f"param.value({self._value!r})"

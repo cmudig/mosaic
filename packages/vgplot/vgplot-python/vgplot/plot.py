@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import datetime
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 from .util import camelize, omit_none
-from .params import _ParamBase
+from .params import _ParamBase, _serialize_date
 from .data import DataDef
 
 
@@ -66,6 +67,8 @@ def encode_value(
     param_names: Dict[int, str] | None = None,
     data_names: Dict[int, str] | None = None,
 ) -> Any:
+    if isinstance(v, (datetime.date, datetime.datetime)):
+        return _serialize_date(v)
     if isinstance(v, DataDef):
         if data_names and id(v) in data_names:
             return data_names[id(v)]

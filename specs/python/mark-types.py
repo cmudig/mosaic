@@ -1,8 +1,7 @@
 import vgplot as vg
 
-md = {
-    "type": "json",
-    "data": [
+md = vg.json(
+    [
         {"i": 0, "u": "A", "v": 2},
         {"i": 1, "u": "B", "v": 8},
         {"i": 2, "u": "C", "v": 3},
@@ -11,12 +10,14 @@ md = {
         {"i": 5, "u": "F", "v": 4},
         {"i": 6, "u": "G", "v": 6},
         {"i": 7, "u": "H", "v": 1},
-    ],
-}
+    ]
+)
 
 view = vg.vconcat(
     vg.hconcat(
-        vg.plot(vg.bar_y(md, x="u", y="v", fill="steelblue")),
+        vg.plot(
+            vg.bar_y(md, x="u", y="v", fill="steelblue"),
+        ),
         vg.plot(
             vg.line_y(
                 md,
@@ -25,11 +26,17 @@ view = vg.vconcat(
                 stroke="steelblue",
                 curve="monotone-x",
                 marker="circle",
-            )
+            ),
         ),
-        vg.plot(vg.text(md, x="u", y="v", text="u", fill="steelblue")),
-        vg.plot(vg.tick_y(md, x="u", y="v", stroke="steelblue")),
-        vg.plot(vg.area_y(md, x="u", y="v", fill="steelblue")),
+        vg.plot(
+            vg.text(md, x="u", y="v", text="u", fill="steelblue"),
+        ),
+        vg.plot(
+            vg.tick_y(md, x="u", y="v", stroke="steelblue"),
+        ),
+        vg.plot(
+            vg.area_y(md, x="u", y="v", fill="steelblue"),
+        ),
     ),
     vg.hconcat(
         vg.plot(
@@ -58,15 +65,12 @@ view = vg.vconcat(
             vg.x_domain([-1, 8]),
         ),
     ),
-)
-
-spec = vg.spec(
-    plotDefaults={
+    plot_defaults={
         "xAxis": None,
         "yAxis": None,
         "margins": {"left": 5, "top": 5, "right": 5, "bottom": 5},
         "width": 160,
         "height": 100,
         "yDomain": [0, 9],
-    }
+    },
 )

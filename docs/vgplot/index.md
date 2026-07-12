@@ -12,9 +12,10 @@ title: Mosaic vgplot
 
 <LangToggle :model-value="language" aria-label="Mosaic vgplot language" @update:model-value="setLanguage" />
 
-<h1>{{ language === 'js' ? 'Mosaic vgplot in Javascript' : 'Mosaic vgplot in Python' }}</h1>
+<h1>{{ language === 'js' ? 'Mosaic vgplot in JavaScript' : 'Mosaic vgplot in Python' }}</h1>
 
 <template v-if="language === 'js'">
+
 A grammar of interactive graphics in which graphical marks are Mosaic clients.
 
 <Example spec="/specs/yaml/mark-types.yaml" />
@@ -27,9 +28,13 @@ vgplot calls Observable Plot to render SVG output.
 This page provides an overview of vgplot.
 Skip to the [examples](/examples/) to dive right in.
 
+<div v-if="language === 'js'">
+
 ::: tip
 `vgplot` re-exports much of the `mosaic-core`, `mosaic-sql`, `mosaic-plot`, and `mosaic-inputs` packages. For many applications, it is sufficient to import `@uwdata/vgplot` alone.
 :::
+
+</div>
 
 ## Plots
 
@@ -94,9 +99,13 @@ Marks support dual modes of operation: if an explicit array of data values is pr
 
 [Marks API Reference](/api/vgplot/marks)
 
+<div v-if="language === 'js'">
+
 ::: warning
 Interactive filtering is not supported if you bypass the database and pass data directly to a mark.
 :::
+
+</div>
 
 ### Basic Marks
 
@@ -182,15 +191,23 @@ To ensure spacing, the `vspace` and `hspace` helpers add padding between element
 
 <template v-else-if="language === 'python'">
 
-Mosaic vgplot is a grammar of interactive graphics: each mark is a Mosaic client that queries data through the coordinator. In Python, `import mosaic.vgplot as vg` gives you composable helpers for plots, attributes, marks, interactors, legends, and layout. Names use **`snake_case`**; Python keywords are escaped with a trailing underscore (`from_`, `as_`, `for_`).
+A grammar of interactive graphics in which graphical marks are Mosaic clients.
 
-The interactive figure below is driven by the same [declarative specification](/spec/) used across Mosaic (YAML in the docs site). In notebooks you usually pass an equivalent structure as a dict—built with `vg.*` helpers, loaded from YAML/JSON, or produced by your own tooling—to [`MosaicWidget`](/jupyter/) as `spec`.
+<Example spec="/specs/yaml/mark-types.yaml" />
+
+In Python, `import vgplot as vg` gives you composable helpers for plots, attributes, marks, interactors, legends, and layout. Names use **`snake_case`**. Key Python-specific conventions: use `vg.source("table")` (not `from_`) to reference a named database table; interactors take `bind=` (not `as=`) for their selection; legends take `plot=` (not `for`) to reference a named plot.
+
+The interactive figure above is driven by the same [declarative specification](/spec/) used across Mosaic (YAML in the docs site). In notebooks you usually pass an equivalent structure as a dict—built with `vg.*` helpers, loaded from YAML/JSON, or produced by your own tooling—to [`MosaicWidget`](/jupyter/) as `spec`.
 
 More copy-paste examples live under [Examples](/examples/) (open the **Python** tab on each page).
 
+<div v-if="language === 'python'">
+
 ::: tip
-The fastest path in Jupyter is often YAML or JSON plus `MosaicWidget(spec=..., data=...)`. Use `mosaic.vgplot` when you want to assemble or adjust specs in code. Option names match the [specification format](/api/spec/format); builder helpers line up with those names in snake_case.
+The fastest path in Jupyter is often YAML or JSON plus `MosaicWidget(spec=..., data=...)`. Use `vgplot` when you want to assemble or adjust specs in code. Option names match the [specification format](/api/spec/format); builder helpers line up with those names in snake_case.
 :::
+
+</div>
 
 ## Plots
 
@@ -202,10 +219,10 @@ Each plot uses [Observable Plot](https://observablehq.com/plot/)–style _channe
 
 
 ``` python
-from mosaic.vgplot import line_y, width, height
+import vgplot as vg
 
 vg.plot(
-    vg.line_y(data=vg.from_("aapl"), x="Date", y="Close"),
+    vg.line_y(vg.source("aapl"), x="Date", y="Close"),
     vg.width(680),
     vg.height(200)
 )
@@ -214,7 +231,7 @@ vg.plot(
 
 This chart uses three directives:
 
-1. A `line_y` mark with `data=vg.from_("aapl")`.
+1. A `line_y` mark with `vg.source("aapl")`.
 2. `vg.width(680)`.
 3. `vg.height(200)`.
 
@@ -224,21 +241,25 @@ This chart uses three directives:
 
 _Attributes_ set plot-level options: size, margins, and scales (`x_domain`, `color_range`, `y_tick_format`, …) via helpers such as `vg.x_domain(...)`, `vg.color_range(...)`, `vg.y_tick_format(...)`. Param references like `"$point"` tie encodings to widget state.
 
-**`Fixed`** domains (e.g. `vg.x_domain(vg.Fixed)`) compute an initial domain from data, then freeze it so filtered views do not rescale in a distracting way.
+**`"Fixed"`** domains (e.g. `vg.x_domain("Fixed")`) compute an initial domain from data, then freeze it so filtered views do not rescale in a distracting way.
 
 [Attributes reference](/api/vgplot/attributes)
 
 ## Marks
 
-_Marks_ are layers backed by Mosaic queries. They usually take `data=vg.from_("table")` plus channel options. Fields may be columns, SQL fragments, or param strings.
+_Marks_ are layers backed by Mosaic queries. They usually take a `vg.source("table")` reference (or a `DataDef` from `vg.parquet()`, `vg.csv()`, etc.) as the first argument, plus channel options. Fields may be columns, SQL fragments, or param strings.
 
-You can pass static rows instead of `from_` for annotations; that path skips the database and does not participate in linked filtering.
+You can pass static rows instead of a database source for annotations; that path skips the database and does not participate in linked filtering.
 
 [Marks reference](/api/vgplot/marks)
 
+<div v-if="language === 'python'">
+
 ::: warning
-Interactive filtering requires data that flows through the coordinator (typically `from_` / registered tables), not ad hoc Python lists alone.
+Interactive filtering requires data that flows through the coordinator (via `vg.source()` / registered tables), not ad hoc Python lists alone.
 :::
+
+</div>
 
 ### Basic marks
 
@@ -270,7 +291,7 @@ Wiring `pan_zoom` selections into `x_domain` / `y_domain` (or equivalent scale b
 
 ## Legends
 
-Legends attach inside `vg.plot` or as separate elements. Naming a plot lets another legend reuse its scales, e.g. `vg.color_legend(for_="my_plot")` (the underscore avoids the Python keyword `for`).
+Legends attach inside `vg.plot` or as separate elements. Naming a plot lets another legend reuse its scales, e.g. `vg.color_legend(plot="my_plot")`.
 
 Discrete color legends can drive the same toggle-style selection behavior as point interactors.
 

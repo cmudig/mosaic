@@ -27,13 +27,7 @@ venv/
 conda-env/
 
 # Python cache
-__pycache__/
 *.pyc
 
-# Test cache
-.pytest_cache/
-.coverage
-
-# Python API Generated classes
-packages/vgplot-python/schema_wrapper/generated_classes.py
 .pnpm-store
+dev/notebooks/__marimo__

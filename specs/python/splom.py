@@ -135,10 +135,7 @@ view = vg.vconcat(
             vg.margin_bottom(35),
         ),
     ),
-)
-
-spec = vg.spec(
-    plotDefaults={
+    plot_defaults={
         "xTicks": 3,
         "yTicks": 4,
         "xDomain": "Fixed",
@@ -156,5 +153,5 @@ spec = vg.spec(
         "yTickFormat": "s",
         "width": 150,
         "height": 150,
-    }
+    },
 )

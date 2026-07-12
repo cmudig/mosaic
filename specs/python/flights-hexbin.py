@@ -30,7 +30,7 @@ view = vg.vconcat(
     vg.hconcat(
         vg.plot(
             vg.hexbin(
-                data="flights",
+                data=flights,
                 filter_by=query,
                 x="time",
                 y="delay",
@@ -63,5 +63,3 @@ view = vg.vconcat(
         ),
     ),
 )
-
-spec = vg.spec()

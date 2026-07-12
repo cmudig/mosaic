@@ -53,7 +53,7 @@ plot(
 Attributes are passed as directives to `vg.plot`, together with marks, interactors, and legends:
 
 ``` python
-import mosaic.vgplot as vg
+import vgplot as vg
 
 vg.plot(
     vg.width(640),
@@ -109,12 +109,12 @@ vg.plot(
 - `xAxis(value)`: Set the axis position (`"top"` or `"bottom"`) or hide the axis (`null`).
 - `xTicks(value)`: Set the approximate number of ticks to generate, or interval, or array of values.
 - `xTickSize(value)`: Set the axis tick size.
-- `xTickSpacing(value)`: Set the the approximate number of pixels between ticks (if xTicks is not specified).
+- `xTickSpacing(value)`: Set the approximate number of pixels between ticks (if xTicks is not specified).
 - `xTickPadding(value)`: Set the axis tick padding.
 - `xTickFormat(value)`: Set the axis tick format.
 - `xTickRotate(value)`: Set the axis tick rotation.
 - `xGrid(value)`: Set if the axis should include grid lines.
-- `xLine(value)`: Set if the axis should includes a line on the plot edge.
+- `xLine(value)`: Set if the axis should include a line on the plot edge.
 - `xLabel(value)`: Set the axis label.
 - `xLabelAnchor(value)`: Set the axis label anchor (`"left"`, `"center"`, `"right"`).
 - `xLabelOffset(value)`: Set the axis label offset in pixels.
@@ -142,12 +142,12 @@ vg.plot(
 - `yAxis(value)`: Set the axis position (`"left"` or `"right"`) or hide the axis (`null`).
 - `yTicks(value)`: Set the approximate number of ticks to generate, or interval, or array of values.
 - `yTickSize(value)`: Set the axis tick size.
-- `yTickSpacing(value)`: Set the the approximate number of pixels between ticks (if yTicks is not specified).
+- `yTickSpacing(value)`: Set the approximate number of pixels between ticks (if yTicks is not specified).
 - `yTickPadding(value)`: Set the axis tick padding.
 - `yTickFormat(value)`: Set the axis tick format.
 - `yTickRotate(value)`: Set the axis tick rotation.
 - `yGrid(value)`: Set if the axis should include grid lines.
-- `yLine(value)`: Set if the axis should includes a line on the plot edge.
+- `yLine(value)`: Set if the axis should include a line on the plot edge.
 - `yLabel(value)`: Set the axis label.
 - `yLabelAnchor(value)`: Set the axis label anchor (`"top"`, `"middle"`, `"bottom"`).
 - `yLabelOffset(value)`: Set the axis label offset in pixels.
@@ -282,9 +282,13 @@ For more on projections, see the [Observable Plot projection documentation](http
 - `projectionInsetBottom(value)`: Set the inset from the bottom edge of the frame (defaults to `projectionInset`).
 - `projectionClip(value)`: Set the projection clipping method. One of: `"frame"` or `true` (default) to clip to the extent of the frame (including margins but not insets), a number to clip to a great circle of the given radius in degrees centered around the origin, or `null` or `false` to disable clipping.
 
+<div v-if="language === 'js'">
+
 ::: warning
 Interval interactors are not currently supported when cartographic projections are used.
 :::
+
+</div>
 
 </template>
 
@@ -327,12 +331,12 @@ Interval interactors are not currently supported when cartographic projections a
 - `x_axis(value)`: Set the axis position (`"top"` or `"bottom"`) or hide the axis (`null`).
 - `x_ticks(value)`: Set the approximate number of ticks to generate, or interval, or array of values.
 - `x_tick_size(value)`: Set the axis tick size.
-- `x_tick_spacing(value)`: Set the the approximate number of pixels between ticks (if `x_ticks` is not specified).
+- `x_tick_spacing(value)`: Set the approximate number of pixels between ticks (if `x_ticks` is not specified).
 - `x_tick_padding(value)`: Set the axis tick padding.
 - `x_tick_format(value)`: Set the axis tick format.
 - `x_tick_rotate(value)`: Set the axis tick rotation.
 - `x_grid(value)`: Set if the axis should include grid lines.
-- `x_line(value)`: Set if the axis should includes a line on the plot edge.
+- `x_line(value)`: Set if the axis should include a line on the plot edge.
 - `x_label(value)`: Set the axis label.
 - `x_label_anchor(value)`: Set the axis label anchor (`"left"`, `"center"`, `"right"`).
 - `x_label_offset(value)`: Set the axis label offset in pixels.
@@ -360,12 +364,12 @@ Interval interactors are not currently supported when cartographic projections a
 - `y_axis(value)`: Set the axis position (`"left"` or `"right"`) or hide the axis (`null`).
 - `y_ticks(value)`: Set the approximate number of ticks to generate, or interval, or array of values.
 - `y_tick_size(value)`: Set the axis tick size.
-- `y_tick_spacing(value)`: Set the the approximate number of pixels between ticks (if `y_ticks` is not specified).
+- `y_tick_spacing(value)`: Set the approximate number of pixels between ticks (if `y_ticks` is not specified).
 - `y_tick_padding(value)`: Set the axis tick padding.
 - `y_tick_format(value)`: Set the axis tick format.
 - `y_tick_rotate(value)`: Set the axis tick rotation.
 - `y_grid(value)`: Set if the axis should include grid lines.
-- `y_line(value)`: Set if the axis should includes a line on the plot edge.
+- `y_line(value)`: Set if the axis should include a line on the plot edge.
 - `y_label(value)`: Set the axis label.
 - `y_label_anchor(value)`: Set the axis label anchor (`"top"`, `"middle"`, `"bottom"`).
 - `y_label_offset(value)`: Set the axis label offset in pixels.
@@ -500,9 +504,13 @@ For more on projections, see the [Observable Plot projection documentation](http
 - `projection_inset_bottom(value)`: Set the inset from the bottom edge of the frame (defaults to `projection_inset`).
 - `projection_clip(value)`: Set the projection clipping method. One of: `"frame"` or `true` (default) to clip to the extent of the frame (including margins but not insets), a number to clip to a great circle of the given radius in degrees centered around the origin, or `null` or `false` to disable clipping.
 
+<div v-if="language === 'python'">
+
 ::: warning
 Interval interactors are not currently supported when cartographic projections are used.
 :::
+
+</div>
 
 </template>
 

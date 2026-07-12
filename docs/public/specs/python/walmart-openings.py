@@ -20,7 +20,5 @@ view = vg.vconcat(
         vg.margin(0),
         vg.fy_label(None),
         vg.projection_type("albers"),
-    )
+    ),
 )
-
-spec = vg.spec()

@@ -11,7 +11,7 @@ view = vg.vconcat(
     vg.plot(
         vg.frame(fill="black"),
         vg.raster(
-            data="latency",
+            data=latency,
             filter_by=filter,
             x="time",
             y="latency",
@@ -39,7 +39,7 @@ view = vg.vconcat(
     ),
     vg.plot(
         vg.bar_x(
-            data="latency",
+            data=latency,
             filter_by=filter,
             x=vg.sum("count"),
             y="route",
@@ -60,5 +60,3 @@ view = vg.vconcat(
         vg.margin_bottom(35),
     ),
 )
-
-spec = vg.spec()

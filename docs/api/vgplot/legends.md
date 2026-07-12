@@ -15,10 +15,14 @@ title: Legends
 Legends visualize color and symbol scales to aid chart interpretation.
 Legends can also serve as [interactors](./interactors) that filter or highlight plot content.
 
+<div v-if="language === 'js'">
+
 ::: warning
 At present only discrete legends can be used as interactors.
 We plan to add support for interval selections over continuous color ramps in the future.
 :::
+
+</div>
 
 ## colorLegend
 
@@ -69,36 +73,55 @@ If invoked with the _for_ option in a standalone fashion, returns a Web element 
 # Legends
 
 Legends visualize color and symbol scales to aid chart interpretation.
-Legend directives from `mosaic.vgplot` compose into the plot spec like other directives.
+Legends can also serve as [interactors](./interactors) that filter or highlight plot content.
+
+<div v-if="language === 'python'">
 
 ::: warning
 At present only discrete legends can be used as interactors.
 We plan to add support for interval selections over continuous color ramps in the future.
 :::
 
+</div>
+
 ## color_legend
 
 `vg.color_legend(...)`
 
-Create a legend for the plot `color` scale (`vg.color_legend(**options)`). The following _options_ are supported:
+Create a new legend for a plot's `color` scale. The following _options_ are supported:
 
-- _for_: A string indicating the [name](./attributes) of the corresponding plot (when building a standalone legend element).
-- _as_: A [Selection](../core/selection) updated by interactions with this legend.
-- Additional options forwarded to Observable Plot legend options when the spec is rendered.
+- _plot_: A string indicating the [name](./attributes) of the corresponding plot (also accepted as `for_`).
+- _bind_: A [Selection](../core/selection) updated by interactions with this legend.
+- Additional options that will be passed to the [Observable Plot legend method](https://observablehq.com/plot/features/legends#legend-options).
 
-Inside `vg.plot(...)`, omit _for_ so the legend belongs to that plot.
+If invoked as a directive within a `vg.plot(...)` definition, the _plot_ option should not be used, and the legend will be included as part of the plot itself.
+If invoked with the _plot_ option in a standalone fashion, returns a standalone legend.
 
 ## opacity_legend
 
 `vg.opacity_legend(...)`
 
-Create a legend for the plot `opacity` scale. Options match the JavaScript [`opacityLegend`](#opacitylegend) case (`_for_`, `_as_`, plus Observable Plot legend options).
+Create a new legend for a plot's `opacity` scale. The following _options_ are supported:
+
+- _plot_: A string indicating the [name](./attributes) of the corresponding plot (also accepted as `for_`).
+- _bind_: A [Selection](../core/selection) updated by interactions with this legend.
+- Additional options that will be passed to the [Observable Plot legend method](https://observablehq.com/plot/features/legends#legend-options).
+
+If invoked as a directive within a `vg.plot(...)` definition, the _plot_ option should not be used, and the legend will be included as part of the plot itself.
+If invoked with the _plot_ option in a standalone fashion, returns a standalone legend.
 
 ## symbol_legend
 
 `vg.symbol_legend(...)`
 
-Create a legend for the plot `symbol` scale. Options match the JavaScript [`symbolLegend`](#symbollegend) case (`_for_`, `_as_`, plus Observable Plot legend options).
+Create a new legend for a plot's `symbol` scale. The following _options_ are supported:
+
+- _plot_: A string indicating the [name](./attributes) of the corresponding plot (also accepted as `for_`).
+- _bind_: A [Selection](../core/selection) updated by interactions with this legend.
+- Additional options that will be passed to the [Observable Plot legend method](https://observablehq.com/plot/features/legends#legend-options).
+
+If invoked as a directive within a `vg.plot(...)` definition, the _plot_ option should not be used, and the legend will be included as part of the plot itself.
+If invoked with the _plot_ option in a standalone fashion, returns a standalone legend.
 
 </template>
 

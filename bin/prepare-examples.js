@@ -7,7 +7,7 @@
 //   - YAML, non-parsed JSON, ESM, and Python copied to /docs/public/specs
 //   - Example Markdown pages written to /docs/examples
 //
-// Run: node bin/prepare-examples.js  (or: npm run docs:examples)
+// Run: npm run docs:examples
 import { basename, extname, join, resolve } from 'node:path';
 import {
   copyFile,
@@ -33,6 +33,8 @@ const esmDocsDir = join(docsDir, 'public', 'specs', 'esm');
 const exampleDir = join(docsDir, 'examples');
 const pythonDocsDir = join(docsDir, 'public', 'specs', 'python');
 
+let hadFailure = false;
+
 const specToTS = spec => {
   return `import { Spec } from '@uwdata/mosaic-spec';
 
@@ -52,6 +54,7 @@ const files = await Promise.allSettled((await readdir(specDir))
     const spec = parse(text);
     const ast = parseSpec(spec);
     const code = astToESM(ast);
+    const python = astToPython(ast);
 
     try {
       await Promise.all([
@@ -82,11 +85,12 @@ const files = await Promise.allSettled((await readdir(specDir))
           examplePage(base, spec.meta)
         ),
         // write Python spec to tests
-        writeFile(resolve(pythonTestDir, `${base}.py`), astToPython(ast)),
+        writeFile(resolve(pythonTestDir, `${base}.py`), python),
         // write Python spec to docs
-        writeFile(resolve(pythonDocsDir, `${base}.py`), astToPython(ast)),
+        writeFile(resolve(pythonDocsDir, `${base}.py`), python),
       ]);
     } catch (err) {
+      hadFailure = true;
       console.error(err);
     }
 
@@ -105,7 +109,15 @@ console.log(JSON.stringify(
 // output unsuccessful example errors
 files
   .filter(x => x.status === 'rejected')
-  .forEach(x => console.error(x.reason));
+  .forEach(x => {
+    hadFailure = true;
+    console.error(x.reason);
+  });
+
+// exit non-zero if any spec failed to generate
+if (hadFailure) {
+  process.exit(1);
+}
 
 function examplePage(spec, { title = spec, description, credit } = {}) {
   return `<script setup>

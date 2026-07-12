@@ -7,13 +7,13 @@ counties = vg.spatial("data/us-counties-10m.json", layer="counties")
 
 series = vg.selection.single()
 quakes = vg.selection.single()
-counties = vg.selection.single()
+counties_filter = vg.selection.single()
 
 view = vg.vconcat(
     vg.plot(
         vg.rule_y(data=[0]),
         vg.line_y(
-            data="bls_unemp",
+            data=bls_unemp,
             optimize=False,
             x="date",
             y="unemployment",
@@ -61,11 +61,9 @@ view = vg.vconcat(
             stroke="currentColor",
             stroke_width=0.25,
         ),
-        vg.region(channels=["id"], bind=counties),
-        vg.highlight(by=counties),
+        vg.region(channels=["id"], bind=counties_filter),
+        vg.highlight(by=counties_filter),
         vg.margin(0),
         vg.projection_type("albers"),
     ),
 )
-
-spec = vg.spec()

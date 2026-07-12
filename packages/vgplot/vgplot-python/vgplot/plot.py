@@ -36,7 +36,7 @@ class Mark:
     data: Optional[Any] = None
     enc: Optional[Dict[str, Any]] = None
 
-    def to_dict(self, param_names: Dict[str, str] | None = None) -> Dict[str, Any]:
+    def to_dict(self, param_names: Dict[int, str] | None = None) -> Dict[str, Any]:
         payload: Dict[str, Any] = {"mark": self.mark}
         enc = dict(self.enc or {})
         _DATA_OPTS = {"filter_by": "filterBy", "optimize": "optimize"}
@@ -46,11 +46,16 @@ class Mark:
                 data_dict: Any = {"from": self.data}
             elif isinstance(self.data, FromRef):
                 data_dict = dict(self.data.to_dict())
+            elif isinstance(self.data, DataDef):
+                data_dict = {"from": self.data}
             else:
                 data_dict = self.data
             if data_opts and isinstance(data_dict, dict):
                 data_dict = {**data_dict, **data_opts}
+                data_opts = {}
             payload["data"] = encode_value(data_dict, param_names)
+        for key, val in data_opts.items():
+            payload[key] = encode_value(val, param_names)
         for k, v in enc.items():
             payload[camelize(k)] = encode_value(v, param_names)
         return payload
@@ -58,12 +63,12 @@ class Mark:
 
 def encode_value(
     v: Any,
-    param_names: Dict[str, str] | None = None,
+    param_names: Dict[int, str] | None = None,
     data_names: Dict[int, str] | None = None,
 ) -> Any:
     if isinstance(v, DataDef):
         if data_names and id(v) in data_names:
-            return {"from": data_names[id(v)]}
+            return data_names[id(v)]
         return v
     if isinstance(v, _ParamBase):
         # Resolve to "$name" ref using the reverse lookup table
@@ -73,7 +78,7 @@ def encode_value(
     if isinstance(v, FromRef):
         return v.to_dict()
     if isinstance(v, Mark):
-        return v.to_dict()
+        return v.to_dict(param_names)
     if isinstance(v, list):
         return [encode_value(x, param_names, data_names) for x in v]
     if isinstance(v, dict):
@@ -82,8 +87,12 @@ def encode_value(
 
 
 def plot(
-    *items: Union[Mark, Directive], param_names: Dict[str, str] | None = None
-) -> Dict[str, Any]:
+    *items: Union[Mark, Directive],
+    param_names: Dict[int, str] | None = None,
+    **kwargs: Any,
+) -> Any:
+    from .spec import View
+
     marks: List[Dict[str, Any]] = []
     directives: Dict[str, Any] = {}
     for item in items:
@@ -98,7 +107,7 @@ def plot(
             raise TypeError(f"Unsupported plot item: {item}")
     root: Dict[str, Any] = {"plot": marks}
     root.update(directives)
-    return root
+    return View(root, **kwargs)
 
 
 def directive(key: str, value: Any) -> Directive:
@@ -211,10 +220,10 @@ def height(value: int) -> Directive:
 
 
 def margins(
-    top: int = None,
-    right: int = None,
-    bottom: int = None,
-    left: int = None,
+    top: Optional[int] = None,
+    right: Optional[int] = None,
+    bottom: Optional[int] = None,
+    left: Optional[int] = None,
     **kwargs: Any,
 ) -> Directive:
     return Directive(
@@ -235,9 +244,13 @@ def y_tick_size(value: Any) -> Directive:
 
 def _encode_component(
     item: Any,
-    param_names: Dict[str, str] | None,
+    param_names: Dict[int, str] | None,
     data_names: Dict[int, str] | None = None,
 ) -> Any:
+    from .spec import View
+
+    if isinstance(item, View):
+        item = item._view
     if isinstance(item, dict) and "plot" in item:
         # re-encode an already-built plot dict so param refs resolve
         marks = [
@@ -258,20 +271,36 @@ def _encode_component(
 
 
 # Layout helpers
-def vconcat(*items: Any, param_names: Dict[str, str] | None = None) -> Dict[str, Any]:
-    return {"vconcat": [_encode_component(i, param_names) for i in items]}
+def vconcat(
+    *items: Any, param_names: Dict[int, str] | None = None, **kwargs: Any
+) -> Any:
+    from .spec import View
+
+    return View(
+        {"vconcat": [_encode_component(i, param_names) for i in items]}, **kwargs
+    )
 
 
-def hconcat(*items: Any, param_names: Dict[str, str] | None = None) -> Dict[str, Any]:
-    return {"hconcat": [_encode_component(i, param_names) for i in items]}
+def hconcat(
+    *items: Any, param_names: Dict[int, str] | None = None, **kwargs: Any
+) -> Any:
+    from .spec import View
+
+    return View(
+        {"hconcat": [_encode_component(i, param_names) for i in items]}, **kwargs
+    )
 
 
-def hspace(px: int) -> Dict[str, Any]:
-    return {"hspace": px}
+def hspace(px: int) -> Any:
+    from .spec import View
+
+    return View({"hspace": px})
 
 
-def vspace(px: int) -> Dict[str, Any]:
-    return {"vspace": px}
+def vspace(px: int) -> Any:
+    from .spec import View
+
+    return View({"vspace": px})
 
 
 _MISSING = object()
@@ -489,7 +518,9 @@ def symbol_legend(
 _INPUT_ALIASES = {"bind": "as", "source": "from"}
 
 
-def input(kind: str, **opts: Any) -> Dict[str, Any]:
+def input(kind: str, **opts: Any) -> Any:
+    from .spec import View
+
     payload = {"input": kind}
     for k, v in opts.items():
         if v is None:
@@ -502,7 +533,7 @@ def input(kind: str, **opts: Any) -> Dict[str, Any]:
         ):
             v = [{"label": i, "value": i} if not isinstance(i, dict) else i for i in v]
         payload[key] = v
-    return payload
+    return View(payload)
 
 
 def slider(
@@ -513,7 +544,7 @@ def slider(
     step: Any = None,
     value: Any = None,
     **opts: Any,
-) -> Dict[str, Any]:
+) -> Any:
     return input(
         "slider",
         label=label,
@@ -533,7 +564,7 @@ def select(
     multiple: bool = False,
     value: Any = None,
     **opts: Any,
-) -> Dict[str, Any]:
+) -> Any:
     return input(
         "select",
         label=label,
@@ -545,7 +576,7 @@ def select(
     )
 
 
-def checkbox(label: str, bind: Any, value: bool = False, **opts: Any) -> Dict[str, Any]:
+def checkbox(label: str, bind: Any, value: bool = False, **opts: Any) -> Any:
     return input("checkbox", label=label, bind=bind, value=value, **opts)
 
 
@@ -558,7 +589,7 @@ def menu(
     column: Any = None,
     filter_by: Any = None,
     **opts: Any,
-) -> Dict[str, Any]:
+) -> Any:
     return input(
         "menu",
         label=label,
@@ -580,7 +611,7 @@ def search(
     filter_by: Any = None,
     type: Any = None,
     **opts: Any,
-) -> Dict[str, Any]:
+) -> Any:
     return input(
         "search",
         label=label,
@@ -604,7 +635,7 @@ def table_input(
     row_batch: Any = None,
     align: Any = None,
     **opts: Any,
-) -> Dict[str, Any]:
+) -> Any:
     return input(
         "table",
         source=source,

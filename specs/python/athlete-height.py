@@ -16,7 +16,7 @@ view = vg.hconcat(
                 select="interval",
                 bind=query,
                 column="batch",
-                source="athletesBatched",
+                source=athletesBatched,
                 step=10,
                 value=20,
                 label="Max Samples",
@@ -25,7 +25,7 @@ view = vg.hconcat(
         ),
         vg.plot(
             vg.errorbar_x(
-                data="athletesBatched",
+                data=athletesBatched,
                 filter_by=query,
                 ci=ci,
                 x="height",
@@ -55,7 +55,5 @@ view = vg.hconcat(
             vg.height(420),
         ),
         vg.color_legend(plot="heights"),
-    )
+    ),
 )
-
-spec = vg.spec()

@@ -17,10 +17,12 @@ filter = vg.selection.crossfilter()
 view = vg.vconcat(
     vg.hconcat(
         vg.plot(
-            vg.raster(data="trips", filter_by=filter, x="px", y="py", bandwidth=0),
+            vg.raster(data=trips, filter_by=filter, x="px", y="py", bandwidth=0),
             vg.interval_xy(bind=filter),
             vg.text(
-                data=[{"label": "Taxi Pickups"}],
+                data=[
+                    {"label": "Taxi Pickups"},
+                ],
                 dx=10,
                 dy=10,
                 text="label",
@@ -40,10 +42,12 @@ view = vg.vconcat(
         ),
         vg.hspace(10),
         vg.plot(
-            vg.raster(data="trips", filter_by=filter, x="dx", y="dy", bandwidth=0),
+            vg.raster(data=trips, filter_by=filter, x="dx", y="dy", bandwidth=0),
             vg.interval_xy(bind=filter),
             vg.text(
-                data=[{"label": "Taxi Dropoffs"}],
+                data=[
+                    {"label": "Taxi Dropoffs"},
+                ],
                 dx=10,
                 dy=10,
                 text="label",
@@ -71,6 +75,5 @@ view = vg.vconcat(
         vg.width(680),
         vg.height(100),
     ),
+    config={"extensions": "spatial"},
 )
-
-spec = vg.spec(config={"extensions": "spatial"})

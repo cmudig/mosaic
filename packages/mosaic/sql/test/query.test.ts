@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { asTableRef, column, desc, gt, lt, max, min, sql, Query, sum, lead, over, cte, add, FromClauseNode, SampleClauseNode, frameRows, div, mul } from '../src/index.js';
+import { asTableRef, column, desc, gt, lt, max, min, sql, Query, sum, lead, over, cte, add, FromClauseNode, SampleClauseNode, frameRows, div, mul, unnest, list } from '../src/index.js';
 
 describe('Query', () => {
   it('selects column name strings', () => {
@@ -450,6 +450,22 @@ describe('Query', () => {
     ).toBe(query);
   });
 
+  it('selects from unnested relation', () => {
+    expect(
+      Query
+        .select({ type: column('type', 'u') })
+        .from(
+          new FromClauseNode(
+            unnest(list(['Gold', 'Silver', 'Bronze'])),
+            'u',
+            undefined,
+            ['type']
+          )
+        )
+        .toString()
+    ).toBe(`SELECT "u"."type" AS "type" FROM UNNEST(['Gold', 'Silver', 'Bronze']) AS "u"("type")`);
+  });
+
   it('selects over windows', () => {
     expect(
       Query
@@ -561,6 +577,22 @@ describe('Query', () => {
 
     expect(Query.exceptAll(q).toString()).toBe(q.join(' EXCEPT ALL '));
     expect(Query.exceptAll(...q).toString()).toBe(q.join(' EXCEPT ALL '));
+  });
+
+  it('renders set operation query modifiers', () => {
+    const q = [
+      Query.select('foo', 'bar', 'baz').from('data1'),
+      Query.select('foo', 'bar', 'baz').from('data2')
+    ];
+
+    expect(
+      Query
+        .unionAll(...q)
+        .orderby('foo')
+        .limit(0)
+        .offset(0)
+        .toString()
+    ).toBe(`${q.join(' UNION ALL ')} ORDER BY "foo" LIMIT 0 OFFSET 0`);
   });
 
   it('supports describe queries', () => {

@@ -7,7 +7,7 @@ curr = vg.selection.intersect()
 view = vg.plot(
     vg.rule_y(data=[0]),
     vg.line_y(
-        data="bls_unemp",
+        data=bls_unemp,
         optimize=False,
         x="date",
         y="unemployment",
@@ -44,5 +44,3 @@ view = vg.plot(
     vg.style("overflow: visible;"),
     vg.width(680),
 )
-
-spec = vg.spec()

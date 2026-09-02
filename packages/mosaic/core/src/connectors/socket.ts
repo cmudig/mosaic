@@ -1,6 +1,7 @@
 import type { ExtractionOptions, Table } from '@uwdata/flechette';
 import type { ArrowQueryRequest, Connector, ExecQueryRequest, JSONQueryRequest, ConnectorQueryRequest } from './Connector.js';
 import { decodeIPC } from '../util/decode-ipc.js';
+import { annotateByteLength, assertCacheable } from '../util/cache.js';
 
 interface SocketOptions {
   uri?: string;
@@ -90,12 +91,21 @@ export class SocketConnector implements Connector {
           // process result
           if (typeof data === 'string') {
             const json = JSON.parse(data);
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            json.error ? reject(json.error) : resolve(json);
+            if (json.error) {
+              reject(json.error);
+            } else {
+              if (json && typeof json === 'object') {
+                annotateByteLength(json, data.length);
+              }
+              assertCacheable(json, 'SocketConnector json');
+              resolve(json);
+            }
           } else if (query.type === 'exec') {
             resolve();
           } else if (query.type === 'arrow') {
-            resolve(decodeIPC(data as Uint8Array, ipc));
+            const table = decodeIPC(data as Uint8Array, ipc);
+            assertCacheable(table, 'SocketConnector arrow');
+            resolve(table);
           } else {
             throw new Error(`Unexpected socket data: ${data}`);
           }

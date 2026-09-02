@@ -1,7 +1,7 @@
 import type { Connector } from './connectors/Connector.js';
 import type { Cache, Logger, QueryEntry, QueryRequest } from './types.js';
 import { consolidator } from './QueryConsolidator.js';
-import { lruCache, voidCache } from './util/cache.js';
+import { assertCacheable, lruCache, voidCache } from './util/cache.js';
 import { PriorityQueue } from './util/priority-queue.js';
 import { QueryResult, QueryState } from './util/query-result.js';
 import { voidLogger } from './util/void-logger.js';
@@ -76,10 +76,9 @@ export class QueryManager {
    * @param result The query result.
    */
   async submit(request: QueryRequest, result: QueryResult): Promise<void> {
+    const { query, type, cache = false, options } = request;
+    const sql = Array.isArray(query) ? query.filter(x => x).join(';\n') : query ? String(query) : null;
     try {
-      const { query, type, cache = false, options } = request;
-      const sql = Array.isArray(query) ? query.filter(x => x).join(';\n') : query ? String(query) : null;
-
       // check query cache
       if (cache) {
         const cached = this.clientCache!.get(sql!);
@@ -103,11 +102,16 @@ export class QueryManager {
 
       const data = await promise;
 
-      if (cache) this.clientCache!.set(sql!, data);
+      if (cache) {
+        assertCacheable(data, `connector result (type=${type})`);
+        this.clientCache!.set(sql!, data);
+      }
 
       this._logger.debug(`Request: ${(performance.now() - t0).toFixed(1)}`);
       result.ready(type === 'exec' ? null : data);
     } catch (err) {
+      // If we stored a pending promise for this key, remove it to prevent leaks
+      if (cache && sql) this.clientCache!.delete(sql);
       result.reject(err);
     }
   }
